@@ -13,497 +13,66 @@
       overflow: hidden;
     }
 
-    @media (hover: hover) { body { cursor: none; } }
-
-    /* ── HUD ── */
     #score, #timer {
       position: fixed;
       top: 24px;
       font-family: system-ui, sans-serif;
       font-size: 48px;
-      font-weight: 400;
+      font-weight: 700;
       color: #000;
       line-height: 1;
-      pointer-events: none;
-      z-index: 10;
     }
     #score { left: 28px; }
     #timer { right: 28px; }
 
-    /* ── grid stage ── */
-    #stage {
-      position: relative;
-      width: 100%; height: 100%;
-    }
-
-    /* ── countdown splash ── */
-    #countdown {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, sans-serif;
-      font-size: 96px;
-      font-weight: 400;
-      color: #000;
-      pointer-events: none;
-      z-index: 50;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-    #countdown.show { opacity: 1; }
-
-    /* ── podo card ── */
-    .podo-card {
+    #grid {
       position: absolute;
-      transform-origin: bottom center;
-      pointer-events: none;
-      z-index: 5;
-    }
-    .podo-card img {
-      display: block;
-      height: 18vh;
-      width: auto;
-      -webkit-user-drag: none;
-      user-select: none;
-    }
-
-    /* entry / exit */
-    @keyframes pop-in {
-      from { transform: translateY(80%) scale(0.8); opacity: 0; }
-      to   { transform: translateY(0)   scale(1);   opacity: 1; }
-    }
-    @keyframes pop-out {
-      from { transform: translateY(0)    scale(1);   opacity: 1; }
-      to   { transform: translateY(-12%) scale(0.9); opacity: 0; }
-    }
-
-    .podo-card.entering { animation: pop-in  0.25s ease-out forwards; }
-    .podo-card.leaving  { animation: pop-out 0.3s  ease-in  forwards; pointer-events: none; }
-
-    /* breathing for lying podo */
-    @keyframes breathing {
-      from { transform: scaleY(1);     }
-      to   { transform: scaleY(1.015); }
-    }
-    .podo-card.lying.idle img {
-      animation: breathing 2.8s ease-in-out infinite alternate;
-      transform-origin: bottom center;
-    }
-
-    /* hovering lying podo — wiggle */
-    @keyframes pet-wiggle {
-      from { transform: translateX(-1.5px); }
-      to   { transform: translateX(1.5px);  }
-    }
-    .podo-card.lying.hovered img {
-      animation: pet-wiggle 0.12s ease-in-out infinite alternate;
-    }
-
-    /* ── hair particle ── */
-    .hair {
-      position: fixed;
-      width: 1px;
-      pointer-events: none;
-      z-index: 20;
-      border-radius: 1px;
-      box-shadow: 0 0 0.5px rgba(0,0,0,0.15);
-    }
-    @keyframes hair-fly {
-      from { opacity: 1; }
-      to   { opacity: 0; }
-    }
-
-    /* ── screen shake ── */
-    @keyframes shake {
-      0%   { transform: translate(0,0); }
-      18%  { transform: translate(-6px,2px); }
-      36%  { transform: translate(5px,-3px); }
-      54%  { transform: translate(-4px,3px); }
-      72%  { transform: translate(4px,-1px); }
-      100% { transform: translate(0,0); }
-    }
-    body.shake { animation: shake 0.22s ease; }
-
-    /* ── overlay ── */
-    #overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.72);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-    #overlay.show { display: flex; }
-    #overlay .end-title {
-      font-family: system-ui, sans-serif;
-      font-size: 48px;
-      font-weight: 400;
-      color: #fff;
-      line-height: 1;
-      margin-bottom: 20px;
-    }
-    #overlay .end-curr {
-      font-family: system-ui, sans-serif;
-      font-size: 24px;
-      font-weight: 400;
-      color: #fff;
-      line-height: 1.7;
-    }
-    #overlay .end-best {
-      font-family: system-ui, sans-serif;
-      font-size: 18px;
-      font-weight: 400;
-      color: rgba(255,255,255,0.45);
-      line-height: 1.7;
-    }
-
-    /* ── hand cursor ── */
-    #hand {
-      position: fixed;
-      pointer-events: none;
-      z-index: 9999;
-      font-size: 48px;
-      line-height: 1;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      user-select: none;
-      transition: transform 0.05s;
+      display: grid;
+      grid-template-columns: repeat(3, 160px);
+      grid-template-rows: repeat(3, 180px);
+      gap: 40px;
     }
-    #hand.wiggling {
-      animation: hand-wiggle 0.25s ease-in-out infinite alternate;
+
+    .hole-container {
+      position: relative;
+      width: 160px;
+      height: 180px;
+      overflow: hidden;
     }
-    @keyframes hand-wiggle {
-      from { transform: translate(-50%,-50%) rotate(-5deg); }
-      to   { transform: translate(-50%,-50%) rotate(5deg);  }
+
+    .hole {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 160px;
+      height: 40px;
+      background: #1a1a1a;
+      border-radius: 50%;
+      box-shadow:
+        inset 0 6px 10px rgba(0,0,0,0.6),
+        0 2px 0 #111;
     }
-    @media (hover: none) { #hand { display: none; } }
   </style>
 </head>
 <body>
 
-  <div id="hand">🫳</div>
   <div id="score">0</div>
   <div id="timer">60</div>
-  <div id="stage"></div>
-  <div id="countdown"></div>
 
-  <div id="overlay">
-    <div class="end-title">끝</div>
-    <div class="end-curr" id="endCurr">점수: 0</div>
-    <div class="end-best" id="endBest">최고: 0</div>
+  <div id="grid">
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><div class="hole"></div></div>
   </div>
-
-  <script>
-    // ── DOM ──────────────────────────────────────────────────
-    const stage     = document.getElementById('stage');
-    const scoreEl   = document.getElementById('score');
-    const timerEl   = document.getElementById('timer');
-    const overlay   = document.getElementById('overlay');
-    const endCurr   = document.getElementById('endCurr');
-    const endBest   = document.getElementById('endBest');
-    const countdown = document.getElementById('countdown');
-    const hand      = document.getElementById('hand');
-
-    // ── state ─────────────────────────────────────────────────
-    let score      = 0;
-    let best       = 0;
-    let timeLeft   = 60;
-    let running    = false;
-
-    let spawnTimer = null;
-    let clockTimer = null;
-
-    const activeCards = new Set();
-
-    // ── audio ─────────────────────────────────────────────────
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    function resumeAc() { if (ac.state === 'suspended') ac.resume(); }
-
-    function playTuk() {
-      const o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sine';
-      o.frequency.setValueAtTime(260, ac.currentTime);
-      o.frequency.exponentialRampToValueAtTime(140, ac.currentTime + 0.05);
-      g.gain.setValueAtTime(0.18, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.06);
-      o.start(); o.stop(ac.currentTime + 0.07);
-    }
-
-    function playWal() {
-      const o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(200, ac.currentTime);
-      o.frequency.exponentialRampToValueAtTime(60, ac.currentTime + 0.18);
-      g.gain.setValueAtTime(0.28, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
-      o.start(); o.stop(ac.currentTime + 0.25);
-    }
-
-    // ── difficulty ────────────────────────────────────────────
-    function diff() {
-      if (score < 10)  return { interval: 1000, stay: 1500, max: 1, standProb: 0.20 };
-      if (score < 25)  return { interval:  800, stay: 1200, max: 2, standProb: 0.30 };
-      if (score < 50)  return { interval:  600, stay: 1000, max: 2, standProb: 0.35 };
-      return             { interval:  500, stay:  800, max: 3, standProb: 0.40 };
-    }
-
-    // ── 3×3 grid positions ────────────────────────────────────
-    // returns {cx, cy} in viewport %
-    function cellCenter(idx) {
-      const col = idx % 3;
-      const row = Math.floor(idx / 3);
-      return {
-        cx: (col * 33.33 + 16.67),   // percent of viewport width
-        cy: (row * 33.33 + 16.67),   // percent of viewport height
-      };
-    }
-
-    function rand(a, b) { return Math.random() * (b - a) + a; }
-    function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
-
-    // ── score ─────────────────────────────────────────────────
-    function addScore(delta) {
-      score += delta;
-      scoreEl.textContent = score;
-      if (score <= -10) gameOver();
-    }
-
-    // ── hair particles ────────────────────────────────────────
-    function spawnHair(x, y) {
-      const colors = ['#ffffff','#f5f5f5','#e8e8e8','#dcdcdc'];
-      const count = randInt(5, 8);
-      for (let i = 0; i < count; i++) {
-        const el = document.createElement('div');
-        el.className = 'hair';
-        const len = rand(6, 8);
-        const color = colors[randInt(0, 3)];
-        const angle = rand(0, 360);
-        const dx = rand(-30, 30);
-        const dy = rand(-40, -20);
-        const dur = rand(0.8, 1.4);
-        el.style.cssText = `
-          left: ${x}px; top: ${y}px;
-          height: ${len}px;
-          background: ${color};
-          transform: rotate(${angle}deg);
-        `;
-        el.animate([
-          { opacity: 1, transform: `rotate(${angle}deg) translate(0,0)` },
-          { opacity: 0, transform: `rotate(${angle + rand(-30,30)}deg) translate(${dx}px,${dy}px)` }
-        ], { duration: dur * 1000, easing: 'ease-out', fill: 'forwards' });
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), dur * 1000 + 50);
-      }
-    }
-
-    // ── screen shake ──────────────────────────────────────────
-    function shake() {
-      document.body.classList.remove('shake');
-      void document.body.offsetWidth;
-      document.body.classList.add('shake');
-      document.body.addEventListener('animationend', () => {
-        document.body.classList.remove('shake');
-      }, { once: true });
-    }
-
-    // ── spawn one podo ────────────────────────────────────────
-    function spawnPodo() {
-      if (!running) return;
-      const d = diff();
-      if (activeCards.size >= d.max) return;
-
-      // pick a cell not already occupied
-      const occupied = new Set([...activeCards].map(c => c.dataset.cell));
-      const free = [...Array(9).keys()].filter(i => !occupied.has(String(i)));
-      if (!free.length) return;
-
-      const cellIdx = free[randInt(0, free.length - 1)];
-      const isStand = Math.random() < d.standProb;
-      const { cx, cy } = cellCenter(cellIdx);
-
-      const card = document.createElement('div');
-      card.className = 'podo-card entering ' + (isStand ? 'standing' : 'lying idle');
-      card.dataset.cell = cellIdx;
-      card.dataset.type = isStand ? 'stand' : 'lying';
-
-      const img = document.createElement('img');
-      img.src = isStand ? 'podo_stand.png' : 'podo_.png';
-      img.draggable = false;
-      card.appendChild(img);
-
-      // center card on cell
-      card.style.cssText = `
-        left: ${cx}vw;
-        top: ${cy}vh;
-        transform: translate(-50%, -50%);
-      `;
-      // override entering animation's transform-origin chain via wrapper
-      card.style.transformOrigin = 'bottom center';
-
-      stage.appendChild(card);
-      activeCards.add(card);
-
-      // switch from entering to idle after pop-in
-      setTimeout(() => {
-        if (!card.isConnected) return;
-        card.classList.remove('entering');
-        if (!isStand) card.classList.add('idle');
-        card.style.pointerEvents = 'auto';
-        attachHover(card);
-      }, 260);
-
-      // auto-dismiss after stay duration
-      const autoRemove = setTimeout(() => dismissCard(card, false), d.stay);
-      card._autoRemove = autoRemove;
-    }
-
-    // ── interact ──────────────────────────────────────────────
-    function attachHover(card) {
-      const enter = () => triggerCard(card);
-      card.addEventListener('mouseenter', enter);
-      card.addEventListener('touchstart', enter, { passive: true });
-    }
-
-    function triggerCard(card) {
-      if (!card.isConnected || card.classList.contains('leaving')) return;
-      if (!running) return;
-
-      const isStand = card.dataset.type === 'stand';
-      const rect = card.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-
-      if (isStand) {
-        addScore(-3);
-        playWal();
-        shake();
-      } else {
-        addScore(1);
-        playTuk();
-        spawnHair(cx, cy);
-      }
-
-      dismissCard(card, true);
-    }
-
-    function dismissCard(card, triggered) {
-      if (!card.isConnected) return;
-      clearTimeout(card._autoRemove);
-      activeCards.delete(card);
-      card.style.pointerEvents = 'none';
-      card.classList.remove('idle', 'hovered', 'entering');
-      card.classList.add('leaving');
-      setTimeout(() => card.remove(), 320);
-    }
-
-    // ── hand cursor ───────────────────────────────────────────
-    let handWiggling = false;
-
-    document.addEventListener('mousemove', (e) => {
-      resumeAc();
-      hand.style.left = e.clientX + 'px';
-      hand.style.top  = e.clientY + 'px';
-
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const card = el && el.closest('.podo-card.lying');
-      if (card && !handWiggling) {
-        handWiggling = true;
-        hand.classList.add('wiggling');
-        card.classList.add('hovered');
-        card.classList.remove('idle');
-      } else if (!card && handWiggling) {
-        handWiggling = false;
-        hand.classList.remove('wiggling');
-        document.querySelectorAll('.podo-card.lying.hovered').forEach(c => {
-          c.classList.remove('hovered');
-          c.classList.add('idle');
-        });
-      }
-    });
-
-    document.addEventListener('touchstart', resumeAc, { once: true });
-
-    // ── countdown splash ──────────────────────────────────────
-    function showCountdown(text) {
-      return new Promise(res => {
-        countdown.textContent = text;
-        countdown.classList.add('show');
-        setTimeout(() => {
-          countdown.classList.remove('show');
-          setTimeout(res, 160);
-        }, 500);
-      });
-    }
-
-    async function startCountdown() {
-      await showCountdown('3');
-      await showCountdown('2');
-      await showCountdown('1');
-      await showCountdown('쓰담!');
-      startGame();
-    }
-
-    // ── game loop ─────────────────────────────────────────────
-    function startGame() {
-      running  = true;
-      score    = 0;
-      timeLeft = 60;
-      scoreEl.textContent = '0';
-      timerEl.textContent = '60';
-
-      // clear any leftover cards
-      stage.querySelectorAll('.podo-card').forEach(c => c.remove());
-      activeCards.clear();
-
-      scheduleSpawn();
-
-      clockTimer = setInterval(() => {
-        timeLeft--;
-        timerEl.textContent = timeLeft;
-        if (timeLeft <= 0) gameOver();
-      }, 1000);
-    }
-
-    function scheduleSpawn() {
-      if (!running) return;
-      const { interval } = diff();
-      spawnPodo();
-      spawnTimer = setTimeout(scheduleSpawn, interval);
-    }
-
-    function gameOver() {
-      running = false;
-      clearTimeout(spawnTimer);
-      clearInterval(clockTimer);
-
-      stage.querySelectorAll('.podo-card').forEach(c => {
-        clearTimeout(c._autoRemove);
-        c.remove();
-      });
-      activeCards.clear();
-
-      if (score > best) best = score;
-      endCurr.textContent = '점수: ' + score;
-      endBest.textContent = '최고: ' + best;
-      overlay.classList.add('show');
-    }
-
-    function restart() {
-      overlay.classList.remove('show');
-      startCountdown();
-    }
-
-    overlay.addEventListener('click', restart);
-    overlay.addEventListener('touchend', (e) => { e.preventDefault(); restart(); });
-
-    // ── boot ──────────────────────────────────────────────────
-    startCountdown();
-  </script>
 
 </body>
 </html>
