@@ -125,6 +125,23 @@
       box-shadow: 0 0 0.5px rgba(0,0,0,0.15);
     }
 
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      font-size: 120px;
+      font-weight: 400;
+      color: #000;
+      pointer-events: none;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+    #splash.show { opacity: 1; }
+
     #overlay {
       display: none;
       position: fixed;
@@ -160,6 +177,7 @@
 </head>
 <body>
 
+  <div id="splash"></div>
   <div id="hand">🫳</div>
   <div id="score">0</div>
   <div id="timer">60</div>
@@ -183,7 +201,7 @@
   </div>
 
   <script>
-    // ── DOM ──────────────────────────────────────────────────
+    // ── DOM ───────────────────────────────────────────────────
     const podos    = Array.from(document.querySelectorAll('.podo'));
     const scoreEl  = document.getElementById('score');
     const timerEl  = document.getElementById('timer');
@@ -192,14 +210,24 @@
     const endCurr  = document.getElementById('endCurr');
     const endBest  = document.getElementById('endBest');
     const hand     = document.getElementById('hand');
+    const splash   = document.getElementById('splash');
 
     // ── state ─────────────────────────────────────────────────
     let score    = 0;
     let best     = 0;
     let timeLeft = 60;
-    let running  = true;
+    let running  = false;
     let clockId  = null;
+    let spawnId  = null;
     const retractTimers = new WeakMap();
+
+    // ── difficulty ────────────────────────────────────────────
+    function diff() {
+      if (score < 10)  return { interval: 900,  stay: 1200, fakeProb: 0,    extraProb: 0,    standProb: 0.20, max: 1 };
+      if (score < 25)  return { interval: 700,  stay: 1000, fakeProb: 0,    extraProb: 0.30, standProb: 0.30, max: 2 };
+      if (score < 50)  return { interval: 500,  stay:  800, fakeProb: 0,    extraProb: 0.50, standProb: 0.35, max: 2 };
+      return             { interval: 400,  stay:  600, fakeProb: 0.05, extraProb: 0.70, standProb: 0.40, max: 3 };
+    }
 
     // ── audio ─────────────────────────────────────────────────
     const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -277,6 +305,7 @@
       if (!running) return;
       running = false;
       clearInterval(clockId);
+      clearTimeout(spawnId);
       podos.forEach(p => retract(p));
       if (score > best) best = score;
       endTitle.textContent = reason === 'time' ? '시간 종료' : '끝';
@@ -292,8 +321,7 @@
       timeLeft = 60;
       scoreEl.textContent = '0';
       timerEl.textContent = '60';
-      running  = true;
-      startClock();
+      runCountdown();
     }
 
     overlay.addEventListener('click', () => { resumeAc(); restart(); });
@@ -330,26 +358,51 @@
       hand.style.left = e.clientX + 'px';
       hand.style.top  = e.clientY + 'px';
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      const isReal = el && el.classList.contains('podo') && el.classList.contains('up') && el.src.includes('podo.png');
+      const isReal = el && el.classList.contains('podo') && el.classList.contains('up') && !el.src.includes('podoo');
       hand.classList.toggle('wiggling', !!isReal);
     });
 
-    // ── pop-up loop ───────────────────────────────────────────
-    function popUp(podo) {
-      podo.src = Math.random() < 0.8 ? 'podo.png' : 'podoo.png';
-      podo.classList.remove('down');
-      podo.classList.add('up');
-      const tid = setTimeout(() => retract(podo), 1200);
-      retractTimers.set(podo, tid);
-    }
+    // ── pop up one podo ───────────────────────────────────────
+    function popOne() {
+      const d = diff();
+      const up = podos.filter(p => p.classList.contains('up'));
+      if (up.length >= d.max) return;
 
-    setInterval(() => {
-      if (!running) return;
       const sleeping = podos.filter(p => !p.classList.contains('up'));
       if (!sleeping.length) return;
+
       const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
-      popUp(pick);
-    }, 900);
+      const isStand = Math.random() < d.standProb;
+      pick.src = isStand ? 'podoo.png' : 'podo.png';
+
+      // fake: podo.png flips to podoo.png mid-rise (score 50+)
+      if (!isStand && Math.random() < d.fakeProb) {
+        setTimeout(() => {
+          if (pick.classList.contains('up')) pick.src = 'podoo.png';
+        }, 150);
+      }
+
+      pick.classList.remove('down');
+      pick.classList.add('up');
+      const tid = setTimeout(() => retract(pick), d.stay);
+      retractTimers.set(pick, tid);
+    }
+
+    // ── spawn loop (self-scheduling for dynamic interval) ─────
+    function scheduleSpawn() {
+      if (!running) return;
+      const { interval, extraProb, max } = diff();
+
+      popOne();
+
+      // maybe spawn an extra one simultaneously
+      const up = podos.filter(p => p.classList.contains('up'));
+      if (up.length < max && Math.random() < extraProb) {
+        popOne();
+      }
+
+      spawnId = setTimeout(scheduleSpawn, interval);
+    }
 
     // ── clock ─────────────────────────────────────────────────
     function startClock() {
@@ -362,7 +415,30 @@
       }, 1000);
     }
 
-    startClock();
+    // ── countdown splash ──────────────────────────────────────
+    function showSplash(text) {
+      return new Promise(res => {
+        splash.textContent = text;
+        splash.classList.add('show');
+        setTimeout(() => {
+          splash.classList.remove('show');
+          setTimeout(res, 120);
+        }, 500);
+      });
+    }
+
+    async function runCountdown() {
+      await showSplash('3');
+      await showSplash('2');
+      await showSplash('1');
+      await showSplash('쓰담!');
+      running = true;
+      startClock();
+      scheduleSpawn();
+    }
+
+    // ── boot ──────────────────────────────────────────────────
+    runCountdown();
   </script>
 
 </body>
