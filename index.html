@@ -74,6 +74,7 @@
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none;
+      z-index: 1;
     }
 
     .podo.up {
@@ -96,15 +97,14 @@
       position: absolute;
       bottom: 0;
       left: 0;
-      width: 160px;
+      width: 100%;
       height: 40px;
       background: #1a1a1a;
       border-radius: 50%;
       box-shadow:
         inset 0 6px 10px rgba(0,0,0,0.6),
         0 2px 0 #111;
-      /* hole sits on top of podo so it looks like podo is inside */
-      z-index: 1;
+      z-index: 2;
     }
     @keyframes shake {
       0%   { transform: translate(0,0); }
