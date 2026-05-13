@@ -54,26 +54,26 @@
 
     #grid {
       display: grid;
-      grid-template-columns: repeat(3, 170px);
-      grid-template-rows: repeat(3, 180px);
-      gap: 30px;
+      grid-template-columns: repeat(3, 240px);
+      grid-template-rows: repeat(3, 240px);
+      gap: 20px;
     }
 
     .hole-container {
       position: relative;
-      width: 170px;
-      height: 180px;
+      width: 240px;
+      height: 240px;
       overflow: hidden;
     }
 
     .podo {
       position: absolute;
-      bottom: 0;
+      bottom: -100%;
       left: 50%;
-      width: 170px;
+      width: 240px;
       height: auto;
-      transform: translate(-50%, 100%);
-      transition: transform 0.25s cubic-bezier(0.5, 0, 0.5, 1.5);
+      transform: translateX(-50%);
+      transition: bottom 0.2s ease-in;   /* going down: fast */
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none;
@@ -81,14 +81,9 @@
     }
 
     .podo.up {
-      transform: translate(-50%, 0%);
-      animation: breathe 2s ease-in-out infinite alternate;
+      bottom: 20px;
+      transition: bottom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);  /* going up: bouncy */
       pointer-events: auto;
-    }
-
-    @keyframes breathe {
-      from { transform: translate(-50%, 0%) scale(1); }
-      to   { transform: translate(-50%, 0%) scale(1.015); }
     }
 
     .podo.patted {
@@ -97,10 +92,10 @@
     }
 
     @keyframes patted {
-      0%   { transform: translate(-50%, 0%)  scale(1, 1); }
-      30%  { transform: translate(-50%, 2%)  scale(1.05, 0.92); }
-      60%  { transform: translate(-50%, -2%) scale(0.97, 1.05); }
-      100% { transform: translate(-50%, 0%)  scale(1, 1); }
+      0%   { transform: translateX(-50%) scale(1, 1); }
+      30%  { transform: translateX(-50%) translateY(2%) scale(1.05, 0.92); }
+      60%  { transform: translateX(-50%) translateY(-2%) scale(0.97, 1.05); }
+      100% { transform: translateX(-50%) scale(1, 1); }
     }
 
     .podo.angry {
@@ -109,16 +104,11 @@
     }
 
     @keyframes angry {
-      0%,100% { transform: translate(-50%, 0%) rotate(0deg); }
-      20%     { transform: translate(-52%, 0%) rotate(-3deg); }
-      40%     { transform: translate(-48%, 0%) rotate(3deg); }
-      60%     { transform: translate(-52%, 0%) rotate(-3deg); }
-      80%     { transform: translate(-48%, 0%) rotate(3deg); }
-    }
-
-    /* override transition for going down — faster, ease-in */
-    .podo.down {
-      transition: transform 0.2s ease-in;
+      0%,100% { transform: translateX(-50%) rotate(0deg); }
+      20%     { transform: translateX(-52%) rotate(-3deg); }
+      40%     { transform: translateX(-48%) rotate(3deg); }
+      60%     { transform: translateX(-52%) rotate(-3deg); }
+      80%     { transform: translateX(-48%) rotate(3deg); }
     }
 
     .hole {
@@ -126,8 +116,8 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 160px;
-      height: 40px;
+      width: 180px;
+      height: 45px;
       background: #1a1a1a;
       border-radius: 50%;
       box-shadow:
@@ -221,13 +211,23 @@
       color: rgba(255,255,255,0.45);
       line-height: 1.7;
     }
-    @media (max-height: 700px) {
-      .hole-container { width: 140px; height: 150px; }
-      .podo { width: 140px; }
+    @media (max-width: 900px), (max-height: 850px) {
+      .hole-container { width: 180px; height: 180px; }
+      .podo { width: 180px; }
       #grid {
-        grid-template-columns: repeat(3, 140px);
-        grid-template-rows: repeat(3, 150px);
-        gap: 20px;
+        grid-template-columns: repeat(3, 180px);
+        grid-template-rows: repeat(3, 180px);
+        gap: 15px;
+      }
+    }
+
+    @media (max-width: 640px), (max-height: 650px) {
+      .hole-container { width: 130px; height: 130px; }
+      .podo { width: 130px; }
+      #grid {
+        grid-template-columns: repeat(3, 130px);
+        grid-template-rows: repeat(3, 130px);
+        gap: 12px;
       }
     }
   </style>
@@ -323,9 +323,7 @@
     // ── retract ───────────────────────────────────────────────
     function retract(podo) {
       clearTimeout(retractTimers.get(podo));
-      podo.classList.remove('up');
-      podo.classList.add('down');
-      podo.addEventListener('transitionend', () => podo.classList.remove('down'), { once: true });
+      podo.classList.remove('up', 'patted', 'angry');
     }
 
     // ── impact ring ───────────────────────────────────────────
@@ -412,12 +410,8 @@
           playTuk();
           spawnRing(cx, cy);
           // squash-and-stretch, then retract
-          podo.classList.remove('up');
           podo.classList.add('patted');
-          setTimeout(() => {
-            podo.classList.remove('patted');
-            retract(podo);
-          }, 350);
+          setTimeout(() => retract(podo), 350);
         }
       };
       podo.addEventListener('pointerdown', trigger);
