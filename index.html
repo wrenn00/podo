@@ -64,9 +64,24 @@
       display: block;
       -webkit-user-drag: none;
       user-select: none;
+      transform-origin: bottom center;
     }
 
-    /* warn: rises just before standing */
+    /* breathing: lying at rest */
+    #podo.lying {
+      animation: breathing 2.8s ease-in-out infinite alternate;
+    }
+
+    #podo.lying.petting {
+      animation: breathing 1.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes breathing {
+      from { transform: scaleY(1)     rotate(0deg); }
+      to   { transform: scaleY(1.018) rotate(0.3deg); }
+    }
+
+    /* warn: rises just before standing — overrides breathing */
     #podo.warn {
       animation: warn var(--warn-dur, 0.4s) ease forwards;
     }
@@ -82,6 +97,8 @@
     #podo.petting {
       animation: pet 0.12s ease-in-out infinite alternate;
     }
+
+    /* lying.petting wins over plain petting — already set above */
 
     @keyframes pet {
       from { transform: translateX(-1.5px); }
@@ -238,6 +255,7 @@
       state = 'LYING';
       podo.src = IMG_LYING;
       podo.classList.remove('warn');
+      podo.classList.add('lying');
 
       const [minT, maxT] = lyingRange();
       const duration = rand(minT, maxT);
@@ -259,6 +277,7 @@
       podo.src = IMG_STANDING;
       podo.classList.remove('warn');
       podo.classList.remove('petting');
+      podo.classList.remove('lying');
 
       if (pressing && onPodo) { gameOver(); return; }
 
@@ -271,6 +290,7 @@
       clearTimeout(warnTimer);
       stopScoring();
       podo.classList.remove('petting');
+      podo.classList.remove('lying');
 
       playWal();
       document.body.classList.add('shake');
