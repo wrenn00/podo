@@ -13,6 +13,33 @@
       overflow: hidden;
     }
 
+    @media (hover: hover) {
+      body { cursor: none; }
+    }
+
+    #hand {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 48px;
+      line-height: 1;
+      transform: translate(-50%, -50%);
+      user-select: none;
+    }
+
+    #hand.petting-hand {
+      animation: hand-wiggle 0.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes hand-wiggle {
+      from { transform: translate(-50%, -50%) rotate(-5deg); }
+      to   { transform: translate(-50%, -50%) rotate(5deg); }
+    }
+
+    @media (hover: none) {
+      #hand { display: none; }
+    }
+
     #score {
       position: fixed;
       top: 24px; left: 28px;
@@ -115,6 +142,7 @@
 </head>
 <body>
 
+  <div id="hand">🖐️</div>
   <div id="score">0</div>
 
   <div id="stage">
@@ -128,6 +156,7 @@
   </div>
 
   <script>
+    const hand      = document.getElementById('hand');
     const podo      = document.getElementById('podo');
     const scoreEl   = document.getElementById('score');
     const overlay   = document.getElementById('overlay');
@@ -267,6 +296,8 @@
 
     function startScoring() {
       if (scoreTimer) return;
+      hand.textContent = '🫳';
+      hand.classList.add('petting-hand');
       podo.classList.add('petting');
       scoreTimer = setInterval(() => {
         if (state === 'LYING') {
@@ -279,6 +310,8 @@
     function stopScoring() {
       clearInterval(scoreTimer);
       scoreTimer = null;
+      hand.textContent = '🖐️';
+      hand.classList.remove('petting-hand');
       podo.classList.remove('petting');
     }
 
@@ -319,6 +352,8 @@
     });
 
     document.addEventListener('mousemove', (e) => {
+      hand.style.left = e.clientX + 'px';
+      hand.style.top  = e.clientY + 'px';
       onMove(e.clientX, e.clientY);
     });
 
