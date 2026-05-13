@@ -13,6 +13,26 @@
       overflow: hidden;
     }
 
+    @media (hover: hover) { body { cursor: none; } }
+
+    #hand {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 48px;
+      line-height: 1;
+      transform: translate(-50%, -50%);
+      user-select: none;
+    }
+    #hand.wiggling {
+      animation: hand-wiggle 0.25s ease-in-out infinite alternate;
+    }
+    @keyframes hand-wiggle {
+      from { transform: translate(-50%, -50%) rotate(-5deg); }
+      to   { transform: translate(-50%, -50%) rotate(5deg); }
+    }
+    @media (hover: none) { #hand { display: none; } }
+
     #score, #timer {
       position: fixed;
       top: 24px;
@@ -53,11 +73,13 @@
       transition: transform 0.25s cubic-bezier(0.5, 0, 0.5, 1.5);
       user-select: none;
       -webkit-user-drag: none;
+      pointer-events: none;
     }
 
     .podo.up {
       transform: translate(-50%, 0%);
       animation: wiggle 0.4s ease-in-out infinite;
+      pointer-events: auto;
     }
 
     @keyframes wiggle {
@@ -84,12 +106,69 @@
       /* hole sits on top of podo so it looks like podo is inside */
       z-index: 1;
     }
+    @keyframes shake {
+      0%   { transform: translate(0,0); }
+      18%  { transform: translate(-6px, 2px); }
+      36%  { transform: translate(5px, -3px); }
+      54%  { transform: translate(-4px, 3px); }
+      72%  { transform: translate(4px, -1px); }
+      100% { transform: translate(0,0); }
+    }
+    body.shake { animation: shake 0.3s ease; }
+
+    .hair {
+      position: fixed;
+      width: 1px;
+      pointer-events: none;
+      z-index: 20;
+      border-radius: 1px;
+      box-shadow: 0 0 0.5px rgba(0,0,0,0.15);
+    }
+
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.70);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    #overlay.show { display: flex; }
+    #overlay .end-title {
+      font-family: system-ui, sans-serif;
+      font-size: 60px;
+      font-weight: 400;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    #overlay .end-curr {
+      font-family: system-ui, sans-serif;
+      font-size: 24px;
+      color: #fff;
+      line-height: 1.7;
+    }
+    #overlay .end-best {
+      font-family: system-ui, sans-serif;
+      font-size: 18px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.7;
+    }
   </style>
 </head>
 <body>
 
+  <div id="hand">🫳</div>
   <div id="score">0</div>
   <div id="timer">60</div>
+
+  <div id="overlay">
+    <div class="end-title" id="endTitle">끝</div>
+    <div class="end-curr"  id="endCurr">점수: 0</div>
+    <div class="end-best"  id="endBest">최고: 0</div>
+  </div>
 
   <div id="grid">
     <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
@@ -104,33 +183,186 @@
   </div>
 
   <script>
-    const podos = Array.from(document.querySelectorAll('.podo'));
+    // ── DOM ──────────────────────────────────────────────────
+    const podos    = Array.from(document.querySelectorAll('.podo'));
+    const scoreEl  = document.getElementById('score');
+    const timerEl  = document.getElementById('timer');
+    const overlay  = document.getElementById('overlay');
+    const endTitle = document.getElementById('endTitle');
+    const endCurr  = document.getElementById('endCurr');
+    const endBest  = document.getElementById('endBest');
+    const hand     = document.getElementById('hand');
 
+    // ── state ─────────────────────────────────────────────────
+    let score    = 0;
+    let best     = 0;
+    let timeLeft = 60;
+    let running  = true;
+    let clockId  = null;
+    const retractTimers = new WeakMap();
+
+    // ── audio ─────────────────────────────────────────────────
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    function resumeAc() { if (ac.state === 'suspended') ac.resume(); }
+
+    function playTuk() {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(200, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(100, ac.currentTime + 0.06);
+      g.gain.setValueAtTime(0.18, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.07);
+      o.start(); o.stop(ac.currentTime + 0.08);
+    }
+
+    function playWal() {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(150, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(50, ac.currentTime + 0.2);
+      g.gain.setValueAtTime(0.3, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
+      o.start(); o.stop(ac.currentTime + 0.25);
+    }
+
+    // ── score ─────────────────────────────────────────────────
+    function addScore(n) {
+      score += n;
+      scoreEl.textContent = score;
+    }
+
+    // ── retract ───────────────────────────────────────────────
+    function retract(podo) {
+      clearTimeout(retractTimers.get(podo));
+      podo.classList.remove('up');
+      podo.classList.add('down');
+      podo.addEventListener('transitionend', () => podo.classList.remove('down'), { once: true });
+    }
+
+    // ── hair particles ────────────────────────────────────────
+    function spawnHair(x, y) {
+      const colors = ['#ffffff','#f5f5f5','#e8e8e8','#dcdcdc'];
+      const count = 6 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'hair';
+        const len   = 6 + Math.random() * 2;
+        const angle = Math.random() * 360;
+        const dx    = (Math.random() - 0.5) * 60;
+        const dy    = -(20 + Math.random() * 20);
+        const dur   = 800 + Math.random() * 600;
+        el.style.cssText = `left:${x}px;top:${y}px;height:${len}px;background:${colors[Math.floor(Math.random()*4)]};transform:rotate(${angle}deg);`;
+        el.animate(
+          [{ opacity:1, transform:`rotate(${angle}deg) translate(0,0)` },
+           { opacity:0, transform:`rotate(${angle+(Math.random()-0.5)*30}deg) translate(${dx}px,${dy}px)` }],
+          { duration: dur, easing: 'ease-out', fill: 'forwards' }
+        );
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), dur + 50);
+      }
+    }
+
+    // ── screen shake ──────────────────────────────────────────
+    function doShake() {
+      document.body.classList.remove('shake');
+      void document.body.offsetWidth;
+      document.body.classList.add('shake');
+      document.body.addEventListener('animationend', () => document.body.classList.remove('shake'), { once: true });
+    }
+
+    // ── game over ─────────────────────────────────────────────
+    function gameOver(reason) {
+      if (!running) return;
+      running = false;
+      clearInterval(clockId);
+      podos.forEach(p => retract(p));
+      if (score > best) best = score;
+      endTitle.textContent = reason === 'time' ? '시간 종료' : '끝';
+      endCurr.textContent  = '점수: ' + score;
+      endBest.textContent  = '최고: ' + best;
+      overlay.classList.add('show');
+    }
+
+    // ── restart ───────────────────────────────────────────────
+    function restart() {
+      overlay.classList.remove('show');
+      score    = 0;
+      timeLeft = 60;
+      scoreEl.textContent = '0';
+      timerEl.textContent = '60';
+      running  = true;
+      startClock();
+    }
+
+    overlay.addEventListener('click', () => { resumeAc(); restart(); });
+    overlay.addEventListener('touchend', (e) => { e.preventDefault(); resumeAc(); restart(); });
+
+    // ── hover interaction ─────────────────────────────────────
+    podos.forEach(podo => {
+      const trigger = () => {
+        resumeAc();
+        if (!running || !podo.classList.contains('up')) return;
+        const rect = podo.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+
+        if (podo.src.includes('podoo')) {
+          retract(podo);
+          playWal();
+          doShake();
+          setTimeout(() => gameOver('dead'), 300);
+        } else {
+          addScore(1);
+          playTuk();
+          spawnHair(cx, cy);
+          retract(podo);
+        }
+      };
+      podo.addEventListener('mouseenter', trigger);
+      podo.addEventListener('touchstart', trigger, { passive: true });
+    });
+
+    // ── hand cursor ───────────────────────────────────────────
+    document.addEventListener('mousemove', (e) => {
+      resumeAc();
+      hand.style.left = e.clientX + 'px';
+      hand.style.top  = e.clientY + 'px';
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const isReal = el && el.classList.contains('podo') && el.classList.contains('up') && el.src.includes('podo.png');
+      hand.classList.toggle('wiggling', !!isReal);
+    });
+
+    // ── pop-up loop ───────────────────────────────────────────
     function popUp(podo) {
-      // pick image
       podo.src = Math.random() < 0.8 ? 'podo.png' : 'podoo.png';
-
-      // rise
       podo.classList.remove('down');
       podo.classList.add('up');
-
-      // retract after 1.2s
-      setTimeout(() => {
-        podo.classList.remove('up');
-        podo.classList.add('down');
-        // clean up .down after transition ends
-        podo.addEventListener('transitionend', () => {
-          podo.classList.remove('down');
-        }, { once: true });
-      }, 1200);
+      const tid = setTimeout(() => retract(podo), 1200);
+      retractTimers.set(podo, tid);
     }
 
     setInterval(() => {
+      if (!running) return;
       const sleeping = podos.filter(p => !p.classList.contains('up'));
       if (!sleeping.length) return;
       const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
       popUp(pick);
     }, 900);
+
+    // ── clock ─────────────────────────────────────────────────
+    function startClock() {
+      clearInterval(clockId);
+      clockId = setInterval(() => {
+        if (!running) return;
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) gameOver('time');
+      }, 1000);
+    }
+
+    startClock();
   </script>
 
 </body>
