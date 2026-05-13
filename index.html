@@ -43,6 +43,33 @@
       overflow: hidden;
     }
 
+    .podo {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 140px;
+      height: auto;
+      transform: translate(-50%, 100%);
+      transition: transform 0.25s cubic-bezier(0.5, 0, 0.5, 1.5);
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .podo.up {
+      transform: translate(-50%, 0%);
+      animation: wiggle 0.4s ease-in-out infinite;
+    }
+
+    @keyframes wiggle {
+      0%, 100% { rotate: 0deg; }
+      50%       { rotate: 1deg; }
+    }
+
+    /* override transition for going down — faster, ease-in */
+    .podo.down {
+      transition: transform 0.2s ease-in;
+    }
+
     .hole {
       position: absolute;
       bottom: 0;
@@ -54,6 +81,8 @@
       box-shadow:
         inset 0 6px 10px rgba(0,0,0,0.6),
         0 2px 0 #111;
+      /* hole sits on top of podo so it looks like podo is inside */
+      z-index: 1;
     }
   </style>
 </head>
@@ -63,16 +92,46 @@
   <div id="timer">60</div>
 
   <div id="grid">
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
-    <div class="hole-container"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
+    <div class="hole-container"><img class="podo" src="podo.png" draggable="false"><div class="hole"></div></div>
   </div>
+
+  <script>
+    const podos = Array.from(document.querySelectorAll('.podo'));
+
+    function popUp(podo) {
+      // pick image
+      podo.src = Math.random() < 0.8 ? 'podo.png' : 'podoo.png';
+
+      // rise
+      podo.classList.remove('down');
+      podo.classList.add('up');
+
+      // retract after 1.2s
+      setTimeout(() => {
+        podo.classList.remove('up');
+        podo.classList.add('down');
+        // clean up .down after transition ends
+        podo.addEventListener('transitionend', () => {
+          podo.classList.remove('down');
+        }, { once: true });
+      }, 1200);
+    }
+
+    setInterval(() => {
+      const sleeping = podos.filter(p => !p.classList.contains('up'));
+      if (!sleeping.length) return;
+      const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
+      popUp(pick);
+    }, 900);
+  </script>
 
 </body>
 </html>
