@@ -51,15 +51,15 @@
       left: 50%;
       transform: translate(-50%, -50%);
       display: grid;
-      grid-template-columns: repeat(3, 160px);
-      grid-template-rows: repeat(3, 180px);
-      gap: 40px;
+      grid-template-columns: repeat(3, 220px);
+      grid-template-rows: repeat(3, 250px);
+      gap: 50px;
     }
 
     .hole-container {
       position: relative;
-      width: 160px;
-      height: 180px;
+      width: 220px;
+      height: 250px;
       overflow: hidden;
     }
 
@@ -67,7 +67,7 @@
       position: absolute;
       bottom: 0;
       left: 50%;
-      width: 140px;
+      width: 200px;
       height: auto;
       transform: translate(-50%, 100%);
       transition: transform 0.25s cubic-bezier(0.5, 0, 0.5, 1.5);
@@ -79,13 +79,38 @@
 
     .podo.up {
       transform: translate(-50%, 0%);
-      animation: wiggle 0.4s ease-in-out infinite;
+      animation: breathe 2s ease-in-out infinite alternate;
       pointer-events: auto;
     }
 
-    @keyframes wiggle {
-      0%, 100% { rotate: 0deg; }
-      50%       { rotate: 1deg; }
+    @keyframes breathe {
+      from { transform: translate(-50%, 0%) scale(1); }
+      to   { transform: translate(-50%, 0%) scale(1.015); }
+    }
+
+    .podo.patted {
+      animation: patted 0.35s ease forwards !important;
+      pointer-events: none;
+    }
+
+    @keyframes patted {
+      0%   { transform: translate(-50%, 0%)  scale(1, 1); }
+      30%  { transform: translate(-50%, 2%)  scale(1.05, 0.92); }
+      60%  { transform: translate(-50%, -2%) scale(0.97, 1.05); }
+      100% { transform: translate(-50%, 0%)  scale(1, 1); }
+    }
+
+    .podo.angry {
+      animation: angry 0.3s ease forwards !important;
+      pointer-events: none;
+    }
+
+    @keyframes angry {
+      0%,100% { transform: translate(-50%, 0%) rotate(0deg); }
+      20%     { transform: translate(-52%, 0%) rotate(-3deg); }
+      40%     { transform: translate(-48%, 0%) rotate(3deg); }
+      60%     { transform: translate(-52%, 0%) rotate(-3deg); }
+      80%     { transform: translate(-48%, 0%) rotate(3deg); }
     }
 
     /* override transition for going down — faster, ease-in */
@@ -98,7 +123,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 40px;
+      height: 55px;
       background: #1a1a1a;
       border-radius: 50%;
       box-shadow:
@@ -106,6 +131,7 @@
         0 2px 0 #111;
       z-index: 2;
     }
+
     @keyframes shake {
       0%   { transform: translate(0,0); }
       18%  { transform: translate(-6px, 2px); }
@@ -116,13 +142,31 @@
     }
     body.shake { animation: shake 0.3s ease; }
 
-    .hair {
+    /* impact ring */
+    .ring {
       position: fixed;
-      width: 1px;
+      border: 2px solid rgba(0,0,0,0.18);
+      border-radius: 50%;
       pointer-events: none;
-      z-index: 20;
-      border-radius: 1px;
-      box-shadow: 0 0 0.5px rgba(0,0,0,0.15);
+      z-index: 50;
+      transform: translate(-50%, -50%);
+    }
+
+    /* red flash overlay */
+    #redflash {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,0,0,0.2);
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+    }
+    #redflash.flash {
+      animation: redflash 0.2s ease forwards;
+    }
+    @keyframes redflash {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     #splash {
@@ -177,6 +221,7 @@
 </head>
 <body>
 
+  <div id="redflash"></div>
   <div id="splash"></div>
   <div id="hand">🫳</div>
   <div id="score">0</div>
@@ -211,6 +256,7 @@
     const endBest  = document.getElementById('endBest');
     const hand     = document.getElementById('hand');
     const splash   = document.getElementById('splash');
+    const redflash = document.getElementById('redflash');
 
     // ── state ─────────────────────────────────────────────────
     let score    = 0;
@@ -237,11 +283,11 @@
       const o = ac.createOscillator(), g = ac.createGain();
       o.connect(g); g.connect(ac.destination);
       o.type = 'sine';
-      o.frequency.setValueAtTime(200, ac.currentTime);
-      o.frequency.exponentialRampToValueAtTime(100, ac.currentTime + 0.06);
+      o.frequency.setValueAtTime(150, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(80, ac.currentTime + 0.08);
       g.gain.setValueAtTime(0.18, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.07);
-      o.start(); o.stop(ac.currentTime + 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.09);
+      o.start(); o.stop(ac.currentTime + 0.10);
     }
 
     function playWal() {
@@ -269,27 +315,29 @@
       podo.addEventListener('transitionend', () => podo.classList.remove('down'), { once: true });
     }
 
-    // ── hair particles ────────────────────────────────────────
-    function spawnHair(x, y) {
-      const colors = ['#ffffff','#f5f5f5','#e8e8e8','#dcdcdc'];
-      const count = 6 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < count; i++) {
-        const el = document.createElement('div');
-        el.className = 'hair';
-        const len   = 6 + Math.random() * 2;
-        const angle = Math.random() * 360;
-        const dx    = (Math.random() - 0.5) * 60;
-        const dy    = -(20 + Math.random() * 20);
-        const dur   = 800 + Math.random() * 600;
-        el.style.cssText = `left:${x}px;top:${y}px;height:${len}px;background:${colors[Math.floor(Math.random()*4)]};transform:rotate(${angle}deg);`;
-        el.animate(
-          [{ opacity:1, transform:`rotate(${angle}deg) translate(0,0)` },
-           { opacity:0, transform:`rotate(${angle+(Math.random()-0.5)*30}deg) translate(${dx}px,${dy}px)` }],
-          { duration: dur, easing: 'ease-out', fill: 'forwards' }
-        );
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), dur + 50);
-      }
+    // ── impact ring ───────────────────────────────────────────
+    function spawnRing(x, y) {
+      const el = document.createElement('div');
+      el.className = 'ring';
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      el.style.width = '0px';
+      el.style.height = '0px';
+      document.body.appendChild(el);
+      el.animate(
+        [{ width: '0px',  height: '0px',  opacity: 1 },
+         { width: '60px', height: '60px', opacity: 0 }],
+        { duration: 400, easing: 'ease-out', fill: 'forwards' }
+      );
+      setTimeout(() => el.remove(), 450);
+    }
+
+    // ── red flash ─────────────────────────────────────────────
+    function doRedFlash() {
+      redflash.classList.remove('flash');
+      void redflash.offsetWidth;
+      redflash.classList.add('flash');
+      redflash.addEventListener('animationend', () => redflash.classList.remove('flash'), { once: true });
     }
 
     // ── screen shake ──────────────────────────────────────────
@@ -329,7 +377,7 @@
 
     // ── hover interaction ─────────────────────────────────────
     podos.forEach(podo => {
-      const trigger = () => {
+      const trigger = (e) => {
         resumeAc();
         if (!running || !podo.classList.contains('up')) return;
         const rect = podo.getBoundingClientRect();
@@ -337,15 +385,26 @@
         const cy = rect.top  + rect.height / 2;
 
         if (podo.src.includes('podoo')) {
-          retract(podo);
+          podo.classList.add('angry');
           playWal();
+          doRedFlash();
           doShake();
-          setTimeout(() => gameOver('dead'), 300);
+          setTimeout(() => {
+            podo.classList.remove('angry');
+            retract(podo);
+            gameOver('dead');
+          }, 300);
         } else {
           addScore(1);
           playTuk();
-          spawnHair(cx, cy);
-          retract(podo);
+          spawnRing(cx, cy);
+          // squash-and-stretch, then retract
+          podo.classList.remove('up');
+          podo.classList.add('patted');
+          setTimeout(() => {
+            podo.classList.remove('patted');
+            retract(podo);
+          }, 350);
         }
       };
       podo.addEventListener('mouseenter', trigger);
