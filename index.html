@@ -3,25 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>포도</title>
+  <title>포도 두더지</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html, body {
-      width: 100%; height: 100%;
-      background: #fafafa;
-      overflow: hidden;
-    }
+    html { height: 100%; }
 
     body {
+      width: 100%; min-height: 100%;
+      background: #fafafa;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      transition: background 0.5s;
+    }
+
+    body.hard   { background: #f0f0f0; }
+    body.insane { background: #ececec; }
+    body.master { background: #ececec; }
+
+    /* vignette for PODO MASTER */
+    body.master::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(180,0,0,0.12) 100%);
+      pointer-events: none;
+      z-index: 1;
     }
 
     @media (hover: hover) { body { cursor: none; } }
 
+    /* ── hand cursor ── */
     #hand {
       position: fixed;
       pointer-events: none;
@@ -31,32 +46,47 @@
       transform: translate(-50%, -50%);
       user-select: none;
     }
-    #hand.wiggling {
-      animation: hand-wiggle 0.25s ease-in-out infinite alternate;
-    }
+    #hand.wiggling { animation: hand-wiggle 0.25s ease-in-out infinite alternate; }
     @keyframes hand-wiggle {
       from { transform: translate(-50%, -50%) rotate(-5deg); }
       to   { transform: translate(-50%, -50%) rotate(5deg); }
     }
     @media (hover: none) { #hand { display: none; } }
 
-    #score, #timer {
+    /* ── HUD ── */
+    #hud-left, #hud-right {
       position: fixed;
-      top: 30px;
-      font-family: system-ui, sans-serif;
+      top: 28px;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #hud-left  { left: 40px; }
+    #hud-right { right: 40px; text-align: right; }
+
+    .hud-big {
       font-size: 48px;
       font-weight: 700;
       color: #000;
-      line-height: 1;
+      transition: color 0.3s;
     }
-    #score { left: 40px; }
-    #timer { right: 40px; }
+    .hud-big.danger { color: #ff3333; }
 
+    .hud-small {
+      font-size: 18px;
+      font-weight: 400;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* ── grid ── */
     #grid {
       display: grid;
       grid-template-columns: repeat(3, 240px);
       grid-template-rows: repeat(3, 280px);
       gap: 10px;
+      position: relative;
+      z-index: 2;
     }
 
     .hole-container {
@@ -90,7 +120,6 @@
       animation: patted 0.35s ease forwards !important;
       pointer-events: none;
     }
-
     @keyframes patted {
       0%   { transform: translateX(-50%) scale(1, 1); }
       30%  { transform: translateX(-50%) translateY(2%) scale(1.05, 0.92); }
@@ -102,7 +131,6 @@
       animation: angry 0.3s ease forwards !important;
       pointer-events: none;
     }
-
     @keyframes angry {
       0%,100% { transform: translateX(-50%) rotate(0deg); }
       20%     { transform: translateX(-52%) rotate(-3deg); }
@@ -120,12 +148,12 @@
       height: 45px;
       background: #1a1a1a;
       border-radius: 50%;
-      box-shadow:
-        inset 0 6px 10px rgba(0,0,0,0.6),
-        0 2px 0 #111;
+      box-shadow: inset 0 6px 10px rgba(0,0,0,0.6), 0 2px 0 #111;
       z-index: 2;
+      pointer-events: none;
     }
 
+    /* ── screen shake ── */
     @keyframes shake {
       0%   { transform: translate(0,0); }
       18%  { transform: translate(-6px, 2px); }
@@ -136,7 +164,7 @@
     }
     body.shake { animation: shake 0.3s ease; }
 
-    /* impact ring */
+    /* ── impact ring ── */
     .ring {
       position: fixed;
       border: 2px solid rgba(0,0,0,0.18);
@@ -146,7 +174,7 @@
       transform: translate(-50%, -50%);
     }
 
-    /* red flash overlay */
+    /* ── red flash ── */
     #redflash {
       position: fixed;
       inset: 0;
@@ -155,31 +183,66 @@
       z-index: 100;
       opacity: 0;
     }
-    #redflash.flash {
-      animation: redflash 0.2s ease forwards;
-    }
-    @keyframes redflash {
-      0%   { opacity: 1; }
-      100% { opacity: 0; }
-    }
+    #redflash.flash { animation: redflash-anim 0.2s ease forwards; }
+    @keyframes redflash-anim { 0% { opacity:1; } 100% { opacity:0; } }
 
+    /* ── splash (countdown / round clear) ── */
     #splash {
       position: fixed;
       inset: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-family: system-ui, sans-serif;
-      font-size: 120px;
-      font-weight: 400;
-      color: #000;
       pointer-events: none;
       z-index: 300;
       opacity: 0;
       transition: opacity 0.1s;
+      gap: 12px;
     }
     #splash.show { opacity: 1; }
+    #splash .sp-main {
+      font-size: 96px;
+      font-weight: 400;
+      color: #000;
+      line-height: 1;
+    }
+    #splash .sp-sub {
+      font-size: 24px;
+      color: #555;
+    }
 
+    /* ── title screen ── */
+    #titlescreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      z-index: 400;
+      gap: 16px;
+      cursor: pointer;
+    }
+    #titlescreen.hidden { display: none; }
+    #titlescreen .ts-title {
+      font-size: 60px;
+      font-weight: 400;
+      color: #000;
+      line-height: 1;
+    }
+    #titlescreen .ts-sub {
+      font-size: 18px;
+      color: #888;
+    }
+    #titlescreen .ts-cta {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #bbb;
+    }
+
+    /* ── overlay (game over / clear) ── */
     #overlay {
       display: none;
       position: fixed;
@@ -189,28 +252,28 @@
       align-items: center;
       justify-content: center;
       z-index: 200;
+      gap: 0;
     }
     #overlay.show { display: flex; }
-    #overlay .end-title {
-      font-family: system-ui, sans-serif;
+    #overlay .ov-title {
       font-size: 60px;
       font-weight: 400;
       color: #fff;
       line-height: 1;
       margin-bottom: 20px;
     }
-    #overlay .end-curr {
-      font-family: system-ui, sans-serif;
-      font-size: 24px;
+    #overlay .ov-line1 {
+      font-size: 20px;
       color: #fff;
-      line-height: 1.7;
+      line-height: 1.8;
     }
-    #overlay .end-best {
-      font-family: system-ui, sans-serif;
-      font-size: 18px;
+    #overlay .ov-line2 {
+      font-size: 16px;
       color: rgba(255,255,255,0.45);
-      line-height: 1.7;
+      line-height: 1.8;
     }
+
+    /* ── responsive ── */
     @media (max-width: 800px), (max-height: 900px) {
       .hole-container { width: 180px; height: 210px; }
       .podo { width: 180px; }
@@ -221,7 +284,6 @@
         gap: 8px;
       }
     }
-
     @media (max-width: 600px) {
       .hole-container { width: 130px; height: 155px; }
       .podo { width: 130px; }
@@ -237,15 +299,27 @@
 <body>
 
   <div id="redflash"></div>
-  <div id="splash"></div>
+  <div id="splash"><span class="sp-main" id="spMain"></span><span class="sp-sub" id="spSub"></span></div>
   <div id="hand">🫳</div>
-  <div id="score">0</div>
-  <div id="timer">60</div>
+
+  <div id="hud-left">
+    <div class="hud-big" id="hudScore">0 / 15</div>
+    <div class="hud-small" id="hudRoundName">EASY</div>
+  </div>
+  <div id="hud-right">
+    <div class="hud-big" id="hudRound">R 1 / 5</div>
+  </div>
 
   <div id="overlay">
-    <div class="end-title" id="endTitle">끝</div>
-    <div class="end-curr"  id="endCurr">점수: 0</div>
-    <div class="end-best"  id="endBest">최고: 0</div>
+    <div class="ov-title" id="ovTitle">끝</div>
+    <div class="ov-line1" id="ovLine1"></div>
+    <div class="ov-line2" id="ovLine2"></div>
+  </div>
+
+  <div id="titlescreen">
+    <div class="ts-title">포도 두더지</div>
+    <div class="ts-sub">5라운드를 모두 클리어하세요</div>
+    <div class="ts-cta">클릭해서 시작</div>
   </div>
 
   <div id="grid">
@@ -261,34 +335,38 @@
   </div>
 
   <script>
+    // ── rounds config ─────────────────────────────────────────
+    const ROUNDS = [
+      { name: 'EASY',        target: 15, spawnInterval: 1000, stayTime: 1400, fakeRatio: 0.15, simultaneous: 1   },
+      { name: 'NORMAL',      target: 20, spawnInterval: 800,  stayTime: 1100, fakeRatio: 0.25, simultaneous: 1.3 },
+      { name: 'HARD',        target: 25, spawnInterval: 600,  stayTime: 900,  fakeRatio: 0.30, simultaneous: 2   },
+      { name: 'INSANE',      target: 30, spawnInterval: 450,  stayTime: 700,  fakeRatio: 0.35, simultaneous: 2.5 },
+      { name: 'PODO MASTER', target: 35, spawnInterval: 300,  stayTime: 500,  fakeRatio: 0.40, simultaneous: 3   },
+    ];
+
     // ── DOM ───────────────────────────────────────────────────
-    const podos    = Array.from(document.querySelectorAll('.podo'));
-    const scoreEl  = document.getElementById('score');
-    const timerEl  = document.getElementById('timer');
-    const overlay  = document.getElementById('overlay');
-    const endTitle = document.getElementById('endTitle');
-    const endCurr  = document.getElementById('endCurr');
-    const endBest  = document.getElementById('endBest');
-    const hand     = document.getElementById('hand');
-    const splash   = document.getElementById('splash');
-    const redflash = document.getElementById('redflash');
+    const podos       = Array.from(document.querySelectorAll('.podo'));
+    const hand        = document.getElementById('hand');
+    const redflash    = document.getElementById('redflash');
+    const splash      = document.getElementById('splash');
+    const spMain      = document.getElementById('spMain');
+    const spSub       = document.getElementById('spSub');
+    const hudScore    = document.getElementById('hudScore');
+    const hudRoundName= document.getElementById('hudRoundName');
+    const hudRound    = document.getElementById('hudRound');
+    const overlay     = document.getElementById('overlay');
+    const ovTitle     = document.getElementById('ovTitle');
+    const ovLine1     = document.getElementById('ovLine1');
+    const ovLine2     = document.getElementById('ovLine2');
+    const titlescreen = document.getElementById('titlescreen');
 
     // ── state ─────────────────────────────────────────────────
-    let score    = 0;
-    let best     = 0;
-    let timeLeft = 60;
-    let running  = false;
-    let clockId  = null;
-    let spawnId  = null;
+    let currentRound = 0;
+    let roundScore   = 0;
+    let running      = false;
+    let spawnId      = null;
+    let startTime    = 0;
     const retractTimers = new WeakMap();
-
-    // ── difficulty ────────────────────────────────────────────
-    function diff() {
-      if (score < 10)  return { interval: 900,  stay: 1200, fakeProb: 0,    extraProb: 0,    standProb: 0.20, max: 1 };
-      if (score < 25)  return { interval: 700,  stay: 1000, fakeProb: 0,    extraProb: 0.30, standProb: 0.30, max: 2 };
-      if (score < 50)  return { interval: 500,  stay:  800, fakeProb: 0,    extraProb: 0.50, standProb: 0.35, max: 2 };
-      return             { interval: 400,  stay:  600, fakeProb: 0.05, extraProb: 0.70, standProb: 0.40, max: 3 };
-    }
 
     // ── audio ─────────────────────────────────────────────────
     const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -316,10 +394,31 @@
       o.start(); o.stop(ac.currentTime + 0.25);
     }
 
-    // ── score ─────────────────────────────────────────────────
-    function addScore(n) {
-      score += n;
-      scoreEl.textContent = score;
+    function playClear() {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(600, ac.currentTime);
+      o.frequency.linearRampToValueAtTime(800, ac.currentTime + 0.2);
+      g.gain.setValueAtTime(0.2, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.25);
+      o.start(); o.stop(ac.currentTime + 0.28);
+    }
+
+    // ── HUD ───────────────────────────────────────────────────
+    function updateHud() {
+      const r = ROUNDS[currentRound];
+      hudScore.textContent = roundScore + ' / ' + r.target;
+      hudRoundName.textContent = r.name;
+      hudRound.textContent = 'R ' + (currentRound + 1) + ' / ' + ROUNDS.length;
+
+      // color cues
+      hudScore.classList.toggle('danger', currentRound >= 3);
+      const body = document.body;
+      body.classList.remove('hard','insane','master');
+      if (currentRound === 2) body.classList.add('hard');
+      if (currentRound === 3) body.classList.add('insane');
+      if (currentRound === 4) body.classList.add('master');
     }
 
     // ── retract ───────────────────────────────────────────────
@@ -327,20 +426,18 @@
       clearTimeout(retractTimers.get(podo));
       podo.classList.remove('up', 'patted', 'angry');
     }
+    function retractAll() { podos.forEach(retract); }
 
     // ── impact ring ───────────────────────────────────────────
     function spawnRing(x, y) {
       const el = document.createElement('div');
       el.className = 'ring';
-      el.style.left = x + 'px';
-      el.style.top  = y + 'px';
-      el.style.width = '0px';
-      el.style.height = '0px';
+      el.style.cssText = `left:${x}px;top:${y}px;width:0;height:0`;
       document.body.appendChild(el);
       el.animate(
-        [{ width: '0px',  height: '0px',  opacity: 1 },
-         { width: '60px', height: '60px', opacity: 0 }],
-        { duration: 400, easing: 'ease-out', fill: 'forwards' }
+        [{ width:'0px', height:'0px', opacity:1 },
+         { width:'60px', height:'60px', opacity:0 }],
+        { duration:400, easing:'ease-out', fill:'forwards' }
       );
       setTimeout(() => el.remove(), 450);
     }
@@ -350,7 +447,7 @@
       redflash.classList.remove('flash');
       void redflash.offsetWidth;
       redflash.classList.add('flash');
-      redflash.addEventListener('animationend', () => redflash.classList.remove('flash'), { once: true });
+      redflash.addEventListener('animationend', () => redflash.classList.remove('flash'), { once:true });
     }
 
     // ── screen shake ──────────────────────────────────────────
@@ -358,43 +455,131 @@
       document.body.classList.remove('shake');
       void document.body.offsetWidth;
       document.body.classList.add('shake');
-      document.body.addEventListener('animationend', () => document.body.classList.remove('shake'), { once: true });
+      document.body.addEventListener('animationend', () => document.body.classList.remove('shake'), { once:true });
+    }
+
+    // ── splash helper ─────────────────────────────────────────
+    function showSplash(main, sub, duration) {
+      return new Promise(res => {
+        spMain.textContent = main;
+        spSub.textContent  = sub || '';
+        splash.classList.add('show');
+        setTimeout(() => {
+          splash.classList.remove('show');
+          setTimeout(res, 120);
+        }, duration || 500);
+      });
+    }
+
+    // ── pop one podo ──────────────────────────────────────────
+    function popOne() {
+      if (!running) return;
+      const r = ROUNDS[currentRound];
+      const up = podos.filter(p => p.classList.contains('up'));
+      const maxUp = Math.floor(r.simultaneous);
+      if (up.length >= maxUp + 1) return;   // hard cap = ceil(simultaneous)
+
+      const sleeping = podos.filter(p => !p.classList.contains('up'));
+      if (!sleeping.length) return;
+
+      const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
+      const isFake = Math.random() < r.fakeRatio;
+      pick.src = isFake ? 'podoo.png' : 'podo.png';
+
+      pick.classList.add('up');
+      const tid = setTimeout(() => retract(pick), r.stayTime);
+      retractTimers.set(pick, tid);
+    }
+
+    // ── spawn loop ────────────────────────────────────────────
+    function scheduleSpawn() {
+      if (!running) return;
+      const r = ROUNDS[currentRound];
+
+      // guaranteed count
+      const base = Math.floor(r.simultaneous);
+      const extra = Math.random() < (r.simultaneous % 1) ? 1 : 0;
+      const count = base + extra;
+      for (let i = 0; i < count; i++) popOne();
+
+      spawnId = setTimeout(scheduleSpawn, r.spawnInterval);
+    }
+
+    // ── round clear ───────────────────────────────────────────
+    async function onRoundClear() {
+      running = false;
+      clearTimeout(spawnId);
+      retractAll();
+      playClear();
+
+      const isLast = currentRound === ROUNDS.length - 1;
+      if (isLast) {
+        await showSplash('ROUND CLEAR!', '', 800);
+        gameClear();
+        return;
+      }
+
+      const nextName = ROUNDS[currentRound + 1].name;
+      await showSplash('ROUND CLEAR!', 'NEXT: ' + nextName, 1500);
+
+      currentRound++;
+      roundScore = 0;
+      updateHud();
+      running = true;
+      scheduleSpawn();
+    }
+
+    // ── score ─────────────────────────────────────────────────
+    function addRoundScore() {
+      roundScore++;
+      updateHud();
+      if (roundScore >= ROUNDS[currentRound].target) {
+        onRoundClear();
+      }
     }
 
     // ── game over ─────────────────────────────────────────────
-    function gameOver(reason) {
+    function gameOver() {
       if (!running) return;
       running = false;
-      clearInterval(clockId);
       clearTimeout(spawnId);
-      podos.forEach(p => retract(p));
-      if (score > best) best = score;
-      endTitle.textContent = reason === 'time' ? '시간 종료' : '끝';
-      endCurr.textContent  = '점수: ' + score;
-      endBest.textContent  = '최고: ' + best;
+      retractAll();
+      const r = ROUNDS[currentRound];
+      ovTitle.textContent = '끝';
+      ovLine1.textContent = '라운드 ' + (currentRound + 1) + '에서 짭포도에게 당함';
+      ovLine2.textContent = '라운드 점수: ' + roundScore + ' / ' + r.target;
+      overlay.classList.add('show');
+    }
+
+    // ── game clear ────────────────────────────────────────────
+    function gameClear() {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      ovTitle.textContent = 'PODO MASTER';
+      ovLine1.textContent = '모든 라운드 클리어!';
+      ovLine2.textContent = '총 ' + elapsed + '초 걸림';
       overlay.classList.add('show');
     }
 
     // ── restart ───────────────────────────────────────────────
     function restart() {
       overlay.classList.remove('show');
-      score    = 0;
-      timeLeft = 60;
-      scoreEl.textContent = '0';
-      timerEl.textContent = '60';
+      document.body.classList.remove('hard','insane','master');
+      currentRound = 0;
+      roundScore   = 0;
+      updateHud();
       runCountdown();
     }
 
-    overlay.addEventListener('click', () => { resumeAc(); restart(); });
-    overlay.addEventListener('touchend', (e) => { e.preventDefault(); resumeAc(); restart(); });
+    overlay.addEventListener('click',   () => { resumeAc(); restart(); });
+    overlay.addEventListener('touchend', e => { e.preventDefault(); resumeAc(); restart(); });
 
-    // ── hover interaction ─────────────────────────────────────
+    // ── interactions ──────────────────────────────────────────
     podos.forEach(podo => {
-      const trigger = (e) => {
+      podo.addEventListener('pointerdown', (e) => {
         resumeAc();
         if (!running || !podo.classList.contains('up')) return;
         const rect = podo.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
+        const cx = rect.left + rect.width  / 2;
         const cy = rect.top  + rect.height / 2;
 
         if (podo.src.includes('podoo')) {
@@ -402,111 +587,54 @@
           playWal();
           doRedFlash();
           doShake();
-          setTimeout(() => {
-            podo.classList.remove('angry');
-            retract(podo);
-            gameOver('dead');
-          }, 300);
+          setTimeout(() => { podo.classList.remove('angry'); retract(podo); gameOver(); }, 300);
         } else {
-          addScore(1);
           playTuk();
           spawnRing(cx, cy);
-          // squash-and-stretch, then retract
           podo.classList.add('patted');
           setTimeout(() => retract(podo), 350);
+          addRoundScore();
         }
-      };
-      podo.addEventListener('pointerdown', trigger);
+      });
     });
 
     // ── hand cursor ───────────────────────────────────────────
-    document.addEventListener('mousemove', (e) => {
-      resumeAc();
+    document.addEventListener('mousemove', e => {
       hand.style.left = e.clientX + 'px';
       hand.style.top  = e.clientY + 'px';
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      const onPodo = el && el.classList.contains('podo') && el.classList.contains('up');
-      const isReal = onPodo && !el.src.includes('podoo');
+      const isReal = el && el.classList.contains('podo') && el.classList.contains('up') && !el.src.includes('podoo');
       hand.classList.toggle('wiggling', !!isReal);
     });
 
-    // ── pop up one podo ───────────────────────────────────────
-    function popOne() {
-      const d = diff();
-      const up = podos.filter(p => p.classList.contains('up'));
-      if (up.length >= d.max) return;
-
-      const sleeping = podos.filter(p => !p.classList.contains('up'));
-      if (!sleeping.length) return;
-
-      const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
-      const isStand = Math.random() < d.standProb;
-      pick.src = isStand ? 'podoo.png' : 'podo.png';
-
-      // fake: podo.png flips to podoo.png mid-rise (score 50+)
-      if (!isStand && Math.random() < d.fakeProb) {
-        setTimeout(() => {
-          if (pick.classList.contains('up')) pick.src = 'podoo.png';
-        }, 150);
-      }
-
-      pick.classList.remove('down');
-      pick.classList.add('up');
-      const tid = setTimeout(() => retract(pick), d.stay);
-      retractTimers.set(pick, tid);
-    }
-
-    // ── spawn loop (self-scheduling for dynamic interval) ─────
-    function scheduleSpawn() {
-      if (!running) return;
-      const { interval, extraProb, max } = diff();
-
-      popOne();
-
-      // maybe spawn an extra one simultaneously
-      const up = podos.filter(p => p.classList.contains('up'));
-      if (up.length < max && Math.random() < extraProb) {
-        popOne();
-      }
-
-      spawnId = setTimeout(scheduleSpawn, interval);
-    }
-
-    // ── clock ─────────────────────────────────────────────────
-    function startClock() {
-      clearInterval(clockId);
-      clockId = setInterval(() => {
-        if (!running) return;
-        timeLeft--;
-        timerEl.textContent = timeLeft;
-        if (timeLeft <= 0) gameOver('time');
-      }, 1000);
-    }
-
-    // ── countdown splash ──────────────────────────────────────
-    function showSplash(text) {
-      return new Promise(res => {
-        splash.textContent = text;
-        splash.classList.add('show');
-        setTimeout(() => {
-          splash.classList.remove('show');
-          setTimeout(res, 120);
-        }, 500);
-      });
-    }
-
+    // ── countdown then start ──────────────────────────────────
     async function runCountdown() {
-      await showSplash('3');
-      await showSplash('2');
-      await showSplash('1');
-      await showSplash('쓰담!');
+      await showSplash('3', '', 500);
+      await showSplash('2', '', 500);
+      await showSplash('1', '', 500);
+      await showSplash('GO!', '', 500);
+      startTime = Date.now();
       running = true;
-      startClock();
       scheduleSpawn();
     }
 
-    // ── boot ──────────────────────────────────────────────────
-    runCountdown();
+    // ── title screen ──────────────────────────────────────────
+    titlescreen.addEventListener('click', () => {
+      resumeAc();
+      titlescreen.classList.add('hidden');
+      updateHud();
+      runCountdown();
+    });
+    titlescreen.addEventListener('touchend', e => {
+      e.preventDefault();
+      resumeAc();
+      titlescreen.classList.add('hidden');
+      updateHud();
+      runCountdown();
+    });
+
+    // init HUD without starting
+    updateHud();
   </script>
 
 </body>
