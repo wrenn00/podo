@@ -446,6 +446,8 @@
     let spawnId      = null;
     let startTime    = 0;
     const retractTimers = new WeakMap();
+    // occupied[i] = true while hole i is in use (podo up or transition out)
+    const occupied = new Array(podos.length).fill(false);
 
     // ── audio ─────────────────────────────────────────────────
     const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -504,8 +506,15 @@
     function retract(podo) {
       clearTimeout(retractTimers.get(podo));
       podo.classList.remove('up', 'patted', 'angry');
+      // release occupied slot after down-transition (0.2s ease-in)
+      const idx = podos.indexOf(podo);
+      if (idx !== -1) setTimeout(() => { occupied[idx] = false; }, 250);
     }
-    function retractAll() { podos.forEach(retract); }
+    function retractAll() {
+      podos.forEach(retract);
+      // eagerly clear all slots so next round starts clean
+      setTimeout(() => occupied.fill(false), 300);
+    }
 
     // ── impact ring ───────────────────────────────────────────
     function spawnRing(x, y) {
@@ -554,20 +563,23 @@
     function popOne() {
       if (!running) return;
       const r = ROUNDS[currentRound];
-      const up = podos.filter(p => p.classList.contains('up'));
-      const maxUp = Math.floor(r.simultaneous);
-      if (up.length >= maxUp + 1) return;   // hard cap = ceil(simultaneous)
 
-      const sleeping = podos.filter(p => !p.classList.contains('up'));
-      if (!sleeping.length) return;
+      // collect indices that are truly free (not occupied)
+      const free = podos.map((_, i) => i).filter(i => !occupied[i]);
+      if (!free.length) return;
 
-      const pick = sleeping[Math.floor(Math.random() * sleeping.length)];
+      // pick a random free slot and reserve it immediately
+      const idx = free[Math.floor(Math.random() * free.length)];
+      occupied[idx] = true;
+
+      const podo = podos[idx];
       const isFake = Math.random() < r.fakeRatio;
-      pick.src = isFake ? 'podoo.png' : 'podo.png';
+      podo.src = isFake ? 'podoo.png' : 'podo.png';
+      podo.dataset.fake = isFake ? '1' : '0';
 
-      pick.classList.add('up');
-      const tid = setTimeout(() => retract(pick), r.stayTime);
-      retractTimers.set(pick, tid);
+      podo.classList.add('up');
+      const tid = setTimeout(() => retract(podo), r.stayTime);
+      retractTimers.set(podo, tid);
     }
 
     // ── spawn loop ────────────────────────────────────────────
@@ -575,8 +587,7 @@
       if (!running) return;
       const r = ROUNDS[currentRound];
 
-      // guaranteed count
-      const base = Math.floor(r.simultaneous);
+      const base  = Math.floor(r.simultaneous);
       const extra = Math.random() < (r.simultaneous % 1) ? 1 : 0;
       const count = base + extra;
       for (let i = 0; i < count; i++) popOne();
@@ -645,6 +656,7 @@
       document.body.classList.remove('hard','insane','master');
       currentRound = 0;
       roundScore   = 0;
+      occupied.fill(false);
       updateHud();
       runCountdown();
     }
