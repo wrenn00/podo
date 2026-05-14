@@ -501,6 +501,79 @@
       letter-spacing: -0.1px;
     }
 
+    /* ── clear screen ── */
+    #clearScreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      z-index: 210;
+      animation: cs-fade 0.5s ease;
+    }
+    #clearScreen.show { display: flex; }
+    @keyframes cs-fade { from { opacity:0; } to { opacity:1; } }
+
+    .clear-podo {
+      width: 240px;
+      height: auto;
+      margin-bottom: 12px;
+      animation:
+        cs-bounce 0.8s cubic-bezier(0.34,1.56,0.64,1),
+        cs-breathe 2.8s ease-in-out 0.8s infinite alternate;
+    }
+    @keyframes cs-bounce {
+      0%   { transform: scale(0) rotate(-10deg); opacity:0; }
+      60%  { transform: scale(1.1) rotate(5deg);  opacity:1; }
+      100% { transform: scale(1) rotate(0);       opacity:1; }
+    }
+    @keyframes cs-breathe {
+      from { transform: scale(1); }
+      to   { transform: scale(1.03); }
+    }
+
+    .clear-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -1px;
+      margin: 0;
+    }
+    .clear-subtitle {
+      font-size: 16px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: -0.3px;
+      margin: 0;
+    }
+    .clear-time {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: -0.2px;
+      margin: 6px 0 20px;
+    }
+    .clear-restart {
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      background: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 100px;
+      cursor: pointer;
+      letter-spacing: -0.3px;
+      font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .clear-restart:hover  { background: #f0f0f0; transform: scale(1.05); }
+    .clear-restart:active { transform: scale(0.95); }
+
     /* ── responsive ── */
     @media (max-width: 800px), (max-height: 900px) {
       .hole-container { width: 180px; height: 210px; }
@@ -539,6 +612,11 @@
       .modal-title { font-size: 20px; }
       .modal-rules .rule-podo { width: 54px; }
       .modal-rules .rule-icon-wrap { width: 32px; height: 32px; font-size: 15px; }
+      .clear-podo { width: 180px; }
+      .clear-title { font-size: 26px; }
+      .clear-subtitle { font-size: 14px; }
+      .clear-time { font-size: 12px; }
+      .clear-restart { font-size: 13px; padding: 10px 24px; }
       #roundToast { padding: 16px 22px; }
       .toast-rank { font-size: 26px; }
       .toast-status { font-size: 13px; }
@@ -598,6 +676,14 @@
     <div class="ov-title" id="ovTitle">끝</div>
     <div class="ov-line1" id="ovLine1"></div>
     <div class="ov-line2" id="ovLine2"></div>
+  </div>
+
+  <div id="clearScreen">
+    <img src="podo.png" class="clear-podo" draggable="false">
+    <h1 class="clear-title">포도 마스터</h1>
+    <p class="clear-subtitle">모든 라운드 완료</p>
+    <p class="clear-time" id="clearTime">총 0초 걸렸어요</p>
+    <button class="clear-restart" id="clearRestart">다시 도전</button>
   </div>
 
   <div id="titlescreen">
@@ -661,6 +747,9 @@
     const ruleModal    = document.getElementById('ruleModal');
     const modalClose   = document.getElementById('modalClose');
     const modalBackdrop= document.getElementById('modalBackdrop');
+    const clearScreen  = document.getElementById('clearScreen');
+    const clearTime    = document.getElementById('clearTime');
+    const clearRestart = document.getElementById('clearRestart');
 
     let currentRound = 0;
     let roundScore   = 0;
@@ -881,15 +970,14 @@
     function gameClear() {
       hideInfoBtn();
       const elapsed = Math.round((Date.now() - startTime) / 1000);
-      ovTitle.textContent = '포도 마스터';
-      ovLine1.textContent = '모든 라운드 완료';
-      ovLine2.textContent = elapsed + '초';
-      overlay.classList.add('show');
+      clearTime.textContent = '총 ' + elapsed + '초 걸렸어요';
+      clearScreen.classList.add('show');
     }
 
     // ── restart ───────────────────────────────────────────────
     function restart() {
       overlay.classList.remove('show');
+      clearScreen.classList.remove('show');
       document.body.classList.remove('hard','insane','master');
       currentRound = 0;
       roundScore   = 0;
@@ -900,6 +988,8 @@
 
     overlay.addEventListener('click',    () => { resumeAc(); restart(); });
     overlay.addEventListener('touchend',  e  => { e.preventDefault(); resumeAc(); restart(); });
+    clearRestart.addEventListener('click',    () => { resumeAc(); restart(); });
+    clearRestart.addEventListener('touchend',  e  => { e.preventDefault(); resumeAc(); restart(); });
 
     // ── interactions ──────────────────────────────────────────
     podos.forEach(podo => {
