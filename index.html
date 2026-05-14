@@ -220,31 +220,88 @@
       position: fixed;
       inset: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       background: #fafafa;
       z-index: 400;
-      gap: 16px;
+      gap: 80px;
       cursor: pointer;
     }
     #titlescreen.hidden { display: none; }
-    #titlescreen .ts-title {
+
+    .title-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ts-title {
       font-size: 60px;
       font-weight: 800;
       color: #000;
       line-height: 1;
     }
-    #titlescreen .ts-sub {
-      font-size: 18px;
+    .ts-game-type {
+      font-size: 24px;
       font-weight: 500;
       color: #888;
     }
-    #titlescreen .ts-cta {
+    .ts-cta {
       margin-top: 20px;
       font-size: 16px;
       font-weight: 500;
       color: #bbb;
+    }
+
+    /* ── rule guide ── */
+    .rule-guide {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .rule-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .rule-podo {
+      width: 90px;
+      height: auto;
+      animation: rule-breath 2.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes rule-breath {
+      from { transform: scale(1); }
+      to   { transform: scale(1.02); }
+    }
+
+    .rule-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .rule-icon-wrap.good { background: #e8f5e9; color: #2e7d32; }
+    .rule-icon-wrap.bad  { background: #ffebee; color: #c62828; }
+
+    .rule-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    @media (max-width: 768px) {
+      #titlescreen { flex-direction: column; gap: 40px; }
+      .rule-guide { flex-direction: row; gap: 24px; }
+      .rule-podo { width: 70px; }
+      .ts-title { font-size: 44px; }
     }
 
     /* ── overlay (game over / clear) ── */
@@ -325,9 +382,23 @@
   </div>
 
   <div id="titlescreen">
-    <div class="ts-title">포도 두더지</div>
-    <div class="ts-sub">다섯 라운드를 모두 깨보세요</div>
-    <div class="ts-cta">클릭해서 시작</div>
+    <div class="rule-guide">
+      <div class="rule-item">
+        <img src="podo.png" class="rule-podo" draggable="false">
+        <div class="rule-icon-wrap good">✋</div>
+        <span class="rule-text">쓰담쓰담</span>
+      </div>
+      <div class="rule-item">
+        <img src="podoo.png" class="rule-podo" draggable="false">
+        <div class="rule-icon-wrap bad">✕</div>
+        <span class="rule-text">절대 금지</span>
+      </div>
+    </div>
+    <div class="title-section">
+      <div class="ts-title">포도 북북 게임</div>
+      <div class="ts-game-type">두더지 게임</div>
+      <div class="ts-cta">클릭해서 시작</div>
+    </div>
   </div>
 
   <div id="grid">
