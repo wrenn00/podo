@@ -54,6 +54,118 @@
     }
     @media (hover: none) { #hand { display: none; } }
 
+    /* ── info button ── */
+    .info-btn {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #000;
+      color: #fff;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+      letter-spacing: -0.5px;
+      transition: transform 0.15s ease;
+    }
+    .info-btn:hover  { transform: scale(1.05); }
+    .info-btn:active { transform: scale(0.95); }
+
+    /* ── rule modal ── */
+    .rule-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .rule-modal.show { display: flex; }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: modal-fade 0.2s ease;
+    }
+    @keyframes modal-fade { from { opacity:0; } to { opacity:1; } }
+
+    .modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 44px;
+      max-width: 440px;
+      width: 90%;
+      animation: modal-up 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes modal-up {
+      from { opacity:0; transform: translateY(16px) scale(0.96); }
+      to   { opacity:1; transform: translateY(0)     scale(1);    }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      color: #aaa;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal-close:hover { background: #f0f0f0; color: #000; }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-size: 13px;
+      font-weight: 500;
+      color: #999;
+      letter-spacing: -0.3px;
+      margin-bottom: 28px;
+    }
+    .modal-rules { display: flex; flex-direction: column; gap: 18px; }
+    .modal-rules .rule-item { display: flex; align-items: center; gap: 14px; }
+    .modal-rules .rule-podo { width: 68px; height: auto; }
+    .modal-rules .rule-icon-wrap {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .modal-rules .rule-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: #000;
+      letter-spacing: -0.2px;
+    }
+
     /* ── HUD ── */
     #hud-left, #hud-right {
       position: fixed;
@@ -62,7 +174,7 @@
       pointer-events: none;
       z-index: 10;
     }
-    #hud-left  { left: 24px; }
+    #hud-left  { left: 72px; }   /* shifted right to clear info-btn */
     #hud-right { right: 24px; text-align: right; }
 
     .hud-num {
@@ -411,8 +523,13 @@
     @media (max-width: 480px) {
       .hud-num { font-size: 22px; }
       .hud-label { font-size: 10px; }
-      #hud-left { top: 16px; left: 16px; }
+      .info-btn { width: 30px; height: 30px; font-size: 13px; top: 16px; left: 16px; }
+      #hud-left { top: 16px; left: 56px; }
       #hud-right { top: 16px; right: 16px; }
+      .modal-content { padding: 28px 20px; }
+      .modal-title { font-size: 20px; }
+      .modal-rules .rule-podo { width: 54px; }
+      .modal-rules .rule-icon-wrap { width: 32px; height: 32px; font-size: 15px; }
       #roundToast { padding: 16px 22px; }
       .toast-rank { font-size: 26px; }
       .toast-status { font-size: 13px; }
@@ -423,6 +540,30 @@
 <body>
 
   <div class="insta-credit">@my_name_is_podo_</div>
+
+  <button class="info-btn" id="infoBtn" aria-label="게임 룰 보기">?</button>
+
+  <div class="rule-modal" id="ruleModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-title">포도 북북 게임</div>
+      <div class="modal-subtitle">두더지 게임</div>
+      <div class="modal-rules">
+        <div class="rule-item">
+          <img src="podo.png" class="rule-podo" draggable="false">
+          <div class="rule-icon-wrap">✋</div>
+          <span class="rule-text">+1</span>
+        </div>
+        <div class="rule-item">
+          <img src="podoo.png" class="rule-podo" draggable="false">
+          <div class="rule-icon-wrap">❌</div>
+          <span class="rule-text">게임 오버</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="redflash"></div>
   <div id="splash"><span class="sp-main" id="spMain"></span></div>
   <div id="hand">🫳</div>
@@ -491,30 +632,55 @@
       { name: '포도 마스터', target: 35, spawnInterval: 300,  stayTime: 500,  fakeRatio: 0.40, simultaneous: 3   },
     ];
 
-    const podos       = Array.from(document.querySelectorAll('.podo'));
-    const hand        = document.getElementById('hand');
-    const redflash    = document.getElementById('redflash');
-    const splash      = document.getElementById('splash');
-    const spMain      = document.getElementById('spMain');
-    const hudScore    = document.getElementById('hudScore');
-    const hudRoundName= document.getElementById('hudRoundName');
-    const hudRound    = document.getElementById('hudRound');
-    const overlay     = document.getElementById('overlay');
-    const ovTitle     = document.getElementById('ovTitle');
-    const ovLine1     = document.getElementById('ovLine1');
-    const ovLine2     = document.getElementById('ovLine2');
-    const titlescreen = document.getElementById('titlescreen');
-    const roundToast  = document.getElementById('roundToast');
-    const toastRank   = document.getElementById('toastRank');
-    const toastNext   = document.getElementById('toastNext');
+    const podos        = Array.from(document.querySelectorAll('.podo'));
+    const hand         = document.getElementById('hand');
+    const redflash     = document.getElementById('redflash');
+    const splash       = document.getElementById('splash');
+    const spMain       = document.getElementById('spMain');
+    const hudScore     = document.getElementById('hudScore');
+    const hudRoundName = document.getElementById('hudRoundName');
+    const hudRound     = document.getElementById('hudRound');
+    const overlay      = document.getElementById('overlay');
+    const ovTitle      = document.getElementById('ovTitle');
+    const ovLine1      = document.getElementById('ovLine1');
+    const ovLine2      = document.getElementById('ovLine2');
+    const titlescreen  = document.getElementById('titlescreen');
+    const roundToast   = document.getElementById('roundToast');
+    const toastRank    = document.getElementById('toastRank');
+    const toastNext    = document.getElementById('toastNext');
+    const infoBtn      = document.getElementById('infoBtn');
+    const ruleModal    = document.getElementById('ruleModal');
+    const modalClose   = document.getElementById('modalClose');
+    const modalBackdrop= document.getElementById('modalBackdrop');
 
     let currentRound = 0;
     let roundScore   = 0;
     let running      = false;
+    let paused       = false;
     let spawnId      = null;
     let startTime    = 0;
     const retractTimers = new WeakMap();
     const occupied = new Array(podos.length).fill(false);
+
+    // ── info btn visibility ───────────────────────────────────
+    function showInfoBtn() { infoBtn.style.display = 'flex'; }
+    function hideInfoBtn() { infoBtn.style.display = 'none'; }
+
+    // ── rule modal ────────────────────────────────────────────
+    function openModal() {
+      ruleModal.classList.add('show');
+      paused = true;
+    }
+    function closeModal() {
+      ruleModal.classList.remove('show');
+      paused = false;
+    }
+    infoBtn.addEventListener('click', openModal);
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && ruleModal.classList.contains('show')) closeModal();
+    });
 
     // ── audio ─────────────────────────────────────────────────
     const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -694,6 +860,7 @@
       running = false;
       clearTimeout(spawnId);
       retractAll();
+      hideInfoBtn();
       const r = ROUNDS[currentRound];
       ovTitle.textContent = '끝';
       ovLine1.textContent = (currentRound + 1) + '라운드 · 짭포도';
@@ -703,6 +870,7 @@
 
     // ── game clear ────────────────────────────────────────────
     function gameClear() {
+      hideInfoBtn();
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       ovTitle.textContent = '포도 마스터';
       ovLine1.textContent = '모든 라운드 완료';
@@ -728,7 +896,7 @@
     podos.forEach(podo => {
       podo.addEventListener('pointerdown', () => {
         resumeAc();
-        if (!running || !podo.classList.contains('up')) return;
+        if (!running || paused || !podo.classList.contains('up')) return;
         const rect = podo.getBoundingClientRect();
         const cx = rect.left + rect.width  / 2;
         const cy = rect.top  + rect.height / 2;
@@ -766,6 +934,7 @@
       await showSplash('시작', 400);
       startTime = Date.now();
       running = true;
+      showInfoBtn();
       scheduleSpawn();
     }
 
