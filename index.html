@@ -8,7 +8,6 @@
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     html { height: 100%; }
 
     body {
@@ -19,20 +18,19 @@
       align-items: center;
       justify-content: center;
       font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      font-weight: 600;
-      transition: background 0.5s;
+      font-weight: 500;
+      transition: background 0.6s;
     }
 
     body.hard   { background: #f0f0f0; }
     body.insane { background: #ececec; }
     body.master { background: #ececec; }
 
-    /* vignette for PODO MASTER */
     body.master::before {
       content: '';
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(180,0,0,0.12) 100%);
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(180,0,0,0.1) 100%);
       pointer-events: none;
       z-index: 1;
     }
@@ -44,42 +42,44 @@
       position: fixed;
       pointer-events: none;
       z-index: 9999;
-      font-size: 48px;
+      font-size: 40px;
       line-height: 1;
       transform: translate(-50%, -50%);
       user-select: none;
     }
     #hand.wiggling { animation: hand-wiggle 0.25s ease-in-out infinite alternate; }
     @keyframes hand-wiggle {
-      from { transform: translate(-50%, -50%) rotate(-5deg); }
-      to   { transform: translate(-50%, -50%) rotate(5deg); }
+      from { transform: translate(-50%,-50%) rotate(-5deg); }
+      to   { transform: translate(-50%,-50%) rotate(5deg); }
     }
     @media (hover: none) { #hand { display: none; } }
 
     /* ── HUD ── */
     #hud-left, #hud-right {
       position: fixed;
-      top: 28px;
+      top: 24px;
       line-height: 1;
       pointer-events: none;
       z-index: 10;
     }
-    #hud-left  { left: 40px; }
-    #hud-right { right: 40px; text-align: right; }
+    #hud-left  { left: 24px; }
+    #hud-right { right: 24px; text-align: right; }
 
-    .hud-big {
-      font-size: 48px;
-      font-weight: 800;
+    .hud-num {
+      font-size: 28px;
+      font-weight: 700;
       color: #000;
+      letter-spacing: -1px;
       transition: color 0.3s;
     }
-    .hud-big.danger { color: #ff3333; }
+    .hud-num.danger { color: #e03030; }
 
-    .hud-small {
-      font-size: 18px;
+    .hud-label {
+      font-size: 11px;
       font-weight: 500;
-      color: #888;
+      color: #aaa;
       margin-top: 4px;
+      letter-spacing: 0;
     }
 
     /* ── grid ── */
@@ -159,10 +159,10 @@
     /* ── screen shake ── */
     @keyframes shake {
       0%   { transform: translate(0,0); }
-      18%  { transform: translate(-6px, 2px); }
-      36%  { transform: translate(5px, -3px); }
-      54%  { transform: translate(-4px, 3px); }
-      72%  { transform: translate(4px, -1px); }
+      18%  { transform: translate(-6px,2px); }
+      36%  { transform: translate(5px,-3px); }
+      54%  { transform: translate(-4px,3px); }
+      72%  { transform: translate(4px,-1px); }
       100% { transform: translate(0,0); }
     }
     body.shake { animation: shake 0.3s ease; }
@@ -170,18 +170,18 @@
     /* ── impact ring ── */
     .ring {
       position: fixed;
-      border: 2px solid rgba(0,0,0,0.18);
+      border: 1.5px solid rgba(0,0,0,0.14);
       border-radius: 50%;
       pointer-events: none;
       z-index: 50;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%,-50%);
     }
 
     /* ── red flash ── */
     #redflash {
       position: fixed;
       inset: 0;
-      background: rgba(255,0,0,0.2);
+      background: rgba(255,0,0,0.18);
       pointer-events: none;
       z-index: 100;
       opacity: 0;
@@ -189,30 +189,69 @@
     #redflash.flash { animation: redflash-anim 0.2s ease forwards; }
     @keyframes redflash-anim { 0% { opacity:1; } 100% { opacity:0; } }
 
-    /* ── splash (countdown / round clear) ── */
+    /* ── countdown splash ── */
     #splash {
       position: fixed;
       inset: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       pointer-events: none;
       z-index: 300;
       opacity: 0;
       transition: opacity 0.1s;
-      gap: 12px;
     }
     #splash.show { opacity: 1; }
     #splash .sp-main {
-      font-size: 96px;
-      font-weight: 400;
+      font-size: 32px;
+      font-weight: 600;
       color: #000;
+      letter-spacing: -0.5px;
+    }
+
+    /* ── round toast ── */
+    #roundToast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 14px;
+      padding: 22px 28px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.4,0,0.2,1);
+      z-index: 150;
+    }
+    #roundToast.show {
+      opacity: 1;
+      transform: translate(-50%,-50%) scale(1);
+    }
+    .toast-rank {
+      font-size: 32px;
+      font-weight: 700;
+      color: #000;
+      letter-spacing: -1px;
       line-height: 1;
     }
-    #splash .sp-sub {
-      font-size: 24px;
-      color: #555;
+    .toast-info { display: flex; flex-direction: column; gap: 3px; }
+    .toast-status {
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      letter-spacing: -0.2px;
+    }
+    .toast-next {
+      font-size: 12px;
+      font-weight: 500;
+      color: #999;
+      letter-spacing: -0.1px;
     }
 
     /* ── title screen ── */
@@ -224,7 +263,7 @@
       justify-content: center;
       background: #fafafa;
       z-index: 400;
-      gap: 80px;
+      gap: 72px;
       cursor: pointer;
     }
     #titlescreen.hidden { display: none; }
@@ -232,76 +271,68 @@
     .title-section {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
     .ts-title {
-      font-size: 60px;
-      font-weight: 800;
+      font-size: 32px;
+      font-weight: 700;
       color: #000;
+      letter-spacing: -1px;
       line-height: 1;
     }
     .ts-game-type {
-      font-size: 24px;
+      font-size: 14px;
       font-weight: 500;
-      color: #888;
+      color: #999;
+      letter-spacing: -0.3px;
+      margin-top: 2px;
     }
     .ts-cta {
-      margin-top: 20px;
-      font-size: 16px;
+      margin-top: 36px;
+      font-size: 13px;
       font-weight: 500;
       color: #bbb;
+      letter-spacing: -0.2px;
     }
 
     /* ── rule guide ── */
     .rule-guide {
       display: flex;
       flex-direction: column;
-      gap: 36px;
+      gap: 28px;
     }
-
     .rule-item {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
-
     .rule-podo {
-      width: 90px;
+      width: 72px;
       height: auto;
       animation: rule-breath 2.8s ease-in-out infinite alternate;
     }
-
     @keyframes rule-breath {
       from { transform: scale(1); }
       to   { transform: scale(1.02); }
     }
-
     .rule-icon-wrap {
-      width: 50px;
-      height: 50px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 14px;
+      font-weight: 700;
       flex-shrink: 0;
     }
-
     .rule-icon-wrap.good { background: #e8f5e9; color: #2e7d32; }
     .rule-icon-wrap.bad  { background: #ffebee; color: #c62828; }
-
     .rule-text {
-      font-size: 18px;
+      font-size: 13px;
       font-weight: 600;
       color: #333;
-    }
-
-    @media (max-width: 768px) {
-      #titlescreen { flex-direction: column; gap: 40px; }
-      .rule-guide { flex-direction: row; gap: 24px; }
-      .rule-podo { width: 70px; }
-      .ts-title { font-size: 44px; }
+      letter-spacing: -0.2px;
     }
 
     /* ── overlay (game over / clear) ── */
@@ -309,44 +340,47 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.70);
+      background: rgba(0,0,0,0.68);
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 200;
-      gap: 0;
     }
     #overlay.show { display: flex; }
-    #overlay .ov-title {
-      font-size: 60px;
-      font-weight: 800;
+    .ov-title {
+      font-size: 28px;
+      font-weight: 700;
       color: #fff;
+      letter-spacing: -0.8px;
       line-height: 1;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    #overlay .ov-line1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.8;
-    }
-    #overlay .ov-line2 {
-      font-size: 16px;
+    .ov-line1 {
+      font-size: 15px;
       font-weight: 500;
-      color: rgba(255,255,255,0.45);
+      color: rgba(255,255,255,0.85);
       line-height: 1.8;
+      letter-spacing: -0.2px;
+    }
+    .ov-line2 {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.8;
+      letter-spacing: -0.1px;
     }
 
     /* ── insta credit ── */
     .insta-credit {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      font-size: 13px;
+      bottom: 20px;
+      right: 20px;
+      font-size: 12px;
       font-weight: 500;
-      color: #aaa;
+      color: #bbb;
       pointer-events: none;
       z-index: 9999;
+      letter-spacing: -0.1px;
     }
 
     /* ── responsive ── */
@@ -369,6 +403,20 @@
         grid-template-rows: repeat(3, 155px);
         gap: 6px;
       }
+      #titlescreen { flex-direction: column; gap: 36px; }
+      .rule-guide { flex-direction: row; gap: 20px; }
+      .rule-podo { width: 56px; }
+      .ts-title { font-size: 26px; }
+    }
+    @media (max-width: 480px) {
+      .hud-num { font-size: 22px; }
+      .hud-label { font-size: 10px; }
+      #hud-left { top: 16px; left: 16px; }
+      #hud-right { top: 16px; right: 16px; }
+      #roundToast { padding: 16px 22px; }
+      .toast-rank { font-size: 26px; }
+      .toast-status { font-size: 13px; }
+      .toast-next { font-size: 11px; }
     }
   </style>
 </head>
@@ -376,16 +424,24 @@
 
   <div class="insta-credit">@my_name_is_podo_</div>
   <div id="redflash"></div>
-  <div id="splash"><span class="sp-main" id="spMain"></span><span class="sp-sub" id="spSub"></span></div>
+  <div id="splash"><span class="sp-main" id="spMain"></span></div>
   <div id="hand">🫳</div>
 
   <div id="hud-left">
-    <div class="hud-big" id="hudScore">0 / 15</div>
-    <div class="hud-small" id="hudRoundName">EASY</div>
+    <div class="hud-num" id="hudScore">0/15</div>
+    <div class="hud-label" id="hudRoundName">쉬움</div>
   </div>
   <div id="hud-right">
-    <div class="hud-big" id="hudRound">1 / 5</div>
-    <div class="hud-small">라운드</div>
+    <div class="hud-num" id="hudRound">1/5</div>
+    <div class="hud-label">라운드</div>
+  </div>
+
+  <div id="roundToast">
+    <div class="toast-rank" id="toastRank">1</div>
+    <div class="toast-info">
+      <div class="toast-status">완료</div>
+      <div class="toast-next" id="toastNext">다음 · 보통</div>
+    </div>
   </div>
 
   <div id="overlay">
@@ -398,19 +454,19 @@
     <div class="rule-guide">
       <div class="rule-item">
         <img src="podo.png" class="rule-podo" draggable="false">
-        <div class="rule-icon-wrap good">✋</div>
-        <span class="rule-text">쓰담쓰담</span>
+        <div class="rule-icon-wrap good">✓</div>
+        <span class="rule-text">+1</span>
       </div>
       <div class="rule-item">
         <img src="podoo.png" class="rule-podo" draggable="false">
         <div class="rule-icon-wrap bad">✕</div>
-        <span class="rule-text">절대 금지</span>
+        <span class="rule-text">게임 오버</span>
       </div>
     </div>
     <div class="title-section">
       <div class="ts-title">포도 북북 게임</div>
       <div class="ts-game-type">두더지 게임</div>
-      <div class="ts-cta">클릭해서 시작</div>
+      <div class="ts-cta">탭해서 시작</div>
     </div>
   </div>
 
@@ -427,7 +483,6 @@
   </div>
 
   <script>
-    // ── rounds config ─────────────────────────────────────────
     const ROUNDS = [
       { name: '쉬움',        target: 15, spawnInterval: 1000, stayTime: 1400, fakeRatio: 0.15, simultaneous: 1   },
       { name: '보통',        target: 20, spawnInterval: 800,  stayTime: 1100, fakeRatio: 0.25, simultaneous: 1.3 },
@@ -436,13 +491,11 @@
       { name: '포도 마스터', target: 35, spawnInterval: 300,  stayTime: 500,  fakeRatio: 0.40, simultaneous: 3   },
     ];
 
-    // ── DOM ───────────────────────────────────────────────────
     const podos       = Array.from(document.querySelectorAll('.podo'));
     const hand        = document.getElementById('hand');
     const redflash    = document.getElementById('redflash');
     const splash      = document.getElementById('splash');
     const spMain      = document.getElementById('spMain');
-    const spSub       = document.getElementById('spSub');
     const hudScore    = document.getElementById('hudScore');
     const hudRoundName= document.getElementById('hudRoundName');
     const hudRound    = document.getElementById('hudRound');
@@ -451,15 +504,16 @@
     const ovLine1     = document.getElementById('ovLine1');
     const ovLine2     = document.getElementById('ovLine2');
     const titlescreen = document.getElementById('titlescreen');
+    const roundToast  = document.getElementById('roundToast');
+    const toastRank   = document.getElementById('toastRank');
+    const toastNext   = document.getElementById('toastNext');
 
-    // ── state ─────────────────────────────────────────────────
     let currentRound = 0;
     let roundScore   = 0;
     let running      = false;
     let spawnId      = null;
     let startTime    = 0;
     const retractTimers = new WeakMap();
-    // occupied[i] = true while hole i is in use (podo up or transition out)
     const occupied = new Array(podos.length).fill(false);
 
     // ── audio ─────────────────────────────────────────────────
@@ -502,30 +556,26 @@
     // ── HUD ───────────────────────────────────────────────────
     function updateHud() {
       const r = ROUNDS[currentRound];
-      hudScore.textContent = roundScore + ' / ' + r.target;
+      hudScore.textContent = roundScore + '/' + r.target;
       hudRoundName.textContent = r.name;
-      hudRound.textContent = (currentRound + 1) + ' / ' + ROUNDS.length;
-
-      // color cues
+      hudRound.textContent = (currentRound + 1) + '/' + ROUNDS.length;
       hudScore.classList.toggle('danger', currentRound >= 3);
-      const body = document.body;
-      body.classList.remove('hard','insane','master');
-      if (currentRound === 2) body.classList.add('hard');
-      if (currentRound === 3) body.classList.add('insane');
-      if (currentRound === 4) body.classList.add('master');
+      const b = document.body;
+      b.classList.remove('hard','insane','master');
+      if (currentRound === 2) b.classList.add('hard');
+      if (currentRound === 3) b.classList.add('insane');
+      if (currentRound === 4) b.classList.add('master');
     }
 
     // ── retract ───────────────────────────────────────────────
     function retract(podo) {
       clearTimeout(retractTimers.get(podo));
-      podo.classList.remove('up', 'patted', 'angry');
-      // release occupied slot after down-transition (0.2s ease-in)
+      podo.classList.remove('up','patted','angry');
       const idx = podos.indexOf(podo);
       if (idx !== -1) setTimeout(() => { occupied[idx] = false; }, 250);
     }
     function retractAll() {
       podos.forEach(retract);
-      // eagerly clear all slots so next round starts clean
       setTimeout(() => occupied.fill(false), 300);
     }
 
@@ -559,16 +609,28 @@
       document.body.addEventListener('animationend', () => document.body.classList.remove('shake'), { once:true });
     }
 
-    // ── splash helper ─────────────────────────────────────────
-    function showSplash(main, sub, duration) {
+    // ── countdown splash ──────────────────────────────────────
+    function showSplash(text, duration) {
       return new Promise(res => {
-        spMain.textContent = main;
-        spSub.textContent  = sub || '';
+        spMain.textContent = text;
         splash.classList.add('show');
         setTimeout(() => {
           splash.classList.remove('show');
-          setTimeout(res, 120);
+          setTimeout(res, 100);
         }, duration || 500);
+      });
+    }
+
+    // ── round toast ───────────────────────────────────────────
+    function showRoundToast(roundNum, nextName) {
+      return new Promise(res => {
+        toastRank.textContent = roundNum;
+        toastNext.textContent = nextName ? '다음 · ' + nextName : '마지막';
+        roundToast.classList.add('show');
+        setTimeout(() => {
+          roundToast.classList.remove('show');
+          setTimeout(res, 270);
+        }, 1400);
       });
     }
 
@@ -576,20 +638,14 @@
     function popOne() {
       if (!running) return;
       const r = ROUNDS[currentRound];
-
-      // collect indices that are truly free (not occupied)
-      const free = podos.map((_, i) => i).filter(i => !occupied[i]);
+      const free = podos.map((_,i) => i).filter(i => !occupied[i]);
       if (!free.length) return;
-
-      // pick a random free slot and reserve it immediately
       const idx = free[Math.floor(Math.random() * free.length)];
       occupied[idx] = true;
-
       const podo = podos[idx];
       const isFake = Math.random() < r.fakeRatio;
       podo.src = isFake ? 'podoo.png' : 'podo.png';
       podo.dataset.fake = isFake ? '1' : '0';
-
       podo.classList.add('up');
       const tid = setTimeout(() => retract(podo), r.stayTime);
       retractTimers.set(podo, tid);
@@ -599,12 +655,9 @@
     function scheduleSpawn() {
       if (!running) return;
       const r = ROUNDS[currentRound];
-
       const base  = Math.floor(r.simultaneous);
       const extra = Math.random() < (r.simultaneous % 1) ? 1 : 0;
-      const count = base + extra;
-      for (let i = 0; i < count; i++) popOne();
-
+      for (let i = 0; i < base + extra; i++) popOne();
       spawnId = setTimeout(scheduleSpawn, r.spawnInterval);
     }
 
@@ -616,14 +669,10 @@
       playClear();
 
       const isLast = currentRound === ROUNDS.length - 1;
-      if (isLast) {
-        await showSplash('라운드 클리어!', '', 800);
-        gameClear();
-        return;
-      }
+      const nextName = isLast ? null : ROUNDS[currentRound + 1].name;
+      await showRoundToast(currentRound + 1, nextName);
 
-      const nextName = ROUNDS[currentRound + 1].name;
-      await showSplash('라운드 클리어!', '다음: ' + nextName, 1500);
+      if (isLast) { gameClear(); return; }
 
       currentRound++;
       roundScore = 0;
@@ -636,9 +685,7 @@
     function addRoundScore() {
       roundScore++;
       updateHud();
-      if (roundScore >= ROUNDS[currentRound].target) {
-        onRoundClear();
-      }
+      if (roundScore >= ROUNDS[currentRound].target) onRoundClear();
     }
 
     // ── game over ─────────────────────────────────────────────
@@ -649,17 +696,17 @@
       retractAll();
       const r = ROUNDS[currentRound];
       ovTitle.textContent = '끝';
-      ovLine1.textContent = (currentRound + 1) + '라운드에서 짭포도에게 당했어요';
-      ovLine2.textContent = '라운드 점수: ' + roundScore + ' / ' + r.target;
+      ovLine1.textContent = (currentRound + 1) + '라운드 · 짭포도';
+      ovLine2.textContent = roundScore + ' / ' + r.target;
       overlay.classList.add('show');
     }
 
     // ── game clear ────────────────────────────────────────────
     function gameClear() {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
-      ovTitle.textContent = '🐶 포도 마스터 🐶';
-      ovLine1.textContent = '모든 라운드를 깼어요';
-      ovLine2.textContent = '총 ' + elapsed + '초 걸렸어요';
+      ovTitle.textContent = '포도 마스터';
+      ovLine1.textContent = '모든 라운드 완료';
+      ovLine2.textContent = elapsed + '초';
       overlay.classList.add('show');
     }
 
@@ -674,12 +721,12 @@
       runCountdown();
     }
 
-    overlay.addEventListener('click',   () => { resumeAc(); restart(); });
-    overlay.addEventListener('touchend', e => { e.preventDefault(); resumeAc(); restart(); });
+    overlay.addEventListener('click',    () => { resumeAc(); restart(); });
+    overlay.addEventListener('touchend',  e  => { e.preventDefault(); resumeAc(); restart(); });
 
     // ── interactions ──────────────────────────────────────────
     podos.forEach(podo => {
-      podo.addEventListener('pointerdown', (e) => {
+      podo.addEventListener('pointerdown', () => {
         resumeAc();
         if (!running || !podo.classList.contains('up')) return;
         const rect = podo.getBoundingClientRect();
@@ -711,33 +758,27 @@
       hand.classList.toggle('wiggling', !!isReal);
     });
 
-    // ── countdown then start ──────────────────────────────────
+    // ── countdown ─────────────────────────────────────────────
     async function runCountdown() {
-      await showSplash('3', '', 500);
-      await showSplash('2', '', 500);
-      await showSplash('1', '', 500);
-      await showSplash('시작!', '', 500);
+      await showSplash('3', 500);
+      await showSplash('2', 500);
+      await showSplash('1', 500);
+      await showSplash('시작', 400);
       startTime = Date.now();
       running = true;
       scheduleSpawn();
     }
 
     // ── title screen ──────────────────────────────────────────
-    titlescreen.addEventListener('click', () => {
+    function startFromTitle() {
       resumeAc();
       titlescreen.classList.add('hidden');
       updateHud();
       runCountdown();
-    });
-    titlescreen.addEventListener('touchend', e => {
-      e.preventDefault();
-      resumeAc();
-      titlescreen.classList.add('hidden');
-      updateHud();
-      runCountdown();
-    });
+    }
+    titlescreen.addEventListener('click',    startFromTitle);
+    titlescreen.addEventListener('touchend', e => { e.preventDefault(); startFromTitle(); });
 
-    // init HUD without starting
     updateHud();
   </script>
 
