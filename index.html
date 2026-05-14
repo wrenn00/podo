@@ -337,6 +337,18 @@
       line-height: 1.8;
     }
 
+    /* ── insta credit ── */
+    .insta-credit {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #aaa;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
     /* ── responsive ── */
     @media (max-width: 800px), (max-height: 900px) {
       .hole-container { width: 180px; height: 210px; }
@@ -362,6 +374,7 @@
 </head>
 <body>
 
+  <div class="insta-credit">@my_name_is_podo_</div>
   <div id="redflash"></div>
   <div id="splash"><span class="sp-main" id="spMain"></span><span class="sp-sub" id="spSub"></span></div>
   <div id="hand">🫳</div>
