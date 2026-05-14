@@ -423,6 +423,12 @@
       height: auto;
       animation: rule-breath 2.8s ease-in-out infinite alternate;
     }
+
+    /* title screen overrides */
+    #titlescreen .rule-podo { width: 140px; }
+    #titlescreen .rule-icon-wrap { width: 60px; height: 60px; font-size: 32px; }
+    #titlescreen .rule-text { font-size: 20px; }
+    #titlescreen .rule-item { gap: 20px; }
     @keyframes rule-breath {
       from { transform: scale(1); }
       to   { transform: scale(1.02); }
@@ -521,6 +527,9 @@
       .ts-title { font-size: 26px; }
     }
     @media (max-width: 480px) {
+      #titlescreen .rule-podo { width: 100px; }
+      #titlescreen .rule-icon-wrap { width: 48px; height: 48px; font-size: 26px; }
+      #titlescreen .rule-text { font-size: 16px; }
       .hud-num { font-size: 22px; }
       .hud-label { font-size: 10px; }
       .info-btn { width: 30px; height: 30px; font-size: 13px; top: 16px; left: 16px; }
